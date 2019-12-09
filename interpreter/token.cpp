@@ -135,7 +135,6 @@ std::ostream &operator<<(std::ostream &os, const Token &t)
 {
     os << "[Token]: " << t.type << " " << t.lexeme << " ";
     if (t.literal.has_value()) {
-        os << t.literal.type().name();
         if (t.literal.type() == typeid(float)) {
             os << std::any_cast<float>(t.literal);
         } else if (t.literal.type() == typeid(std::string)) {

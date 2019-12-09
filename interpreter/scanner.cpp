@@ -1,4 +1,5 @@
 #include "scanner.h"
+#include <cctype>
 #include "util.h"
 
 Scanner::Scanner(const std::string &source) : source(source) {}
@@ -72,6 +73,9 @@ void Scanner::scan_token()
             add_token(TokenType::SLASH);
         }
         break;
+    case '"':
+        scan_string();
+        break;
     case ' ':
     case '\t':
     case '\r':
@@ -80,7 +84,11 @@ void Scanner::scan_token()
         ++line;
         break;
     default:
-        error(line, "Unrecognized character '" + std::string(1, c) + "'");
+        if (std::isdigit(c)) {
+            scan_number();
+        } else {
+            error(line, "Unrecognized character '" + std::string(1, c) + "'");
+        }
         break;
     }
 }
@@ -112,8 +120,53 @@ char Scanner::peek() const
     return source[current];
 }
 
+char Scanner::peek_next() const
+{
+    if (current + 1 >= source.length()) {
+        return '\0';
+    }
+    return source[current + 1];
+}
+
 bool Scanner::at_end() const
 {
     return current >= source.length();
+}
+
+void Scanner::scan_string()
+{
+    while (peek() != '"' && !at_end()) {
+        if (peek() == '\n') {
+            ++line;
+        }
+        advance();
+    }
+
+    if (at_end()) {
+        error(line, "Unterminated string literal");
+        return;
+    }
+
+    // Consume the closing "
+    advance();
+
+    add_token(TokenType::STRING, source.substr(start + 1, current - start - 2));
+}
+
+void Scanner::scan_number()
+{
+    while (std::isdigit(peek()) && !at_end()) {
+        advance();
+    }
+
+    // Check if there's a fractional part after the dot, and if so continue scanning
+    if (peek() == '.' && std::isdigit(peek_next())) {
+        advance();
+        while (std::isdigit(peek()) && !at_end()) {
+            advance();
+        }
+    }
+
+    add_token(TokenType::NUMBER, std::stof(source.substr(start, current - start)));
 }
 

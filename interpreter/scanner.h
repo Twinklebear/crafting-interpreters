@@ -26,7 +26,7 @@ private:
 
     // Add the token literal along with the currently spanned region of the source
     template <typename T>
-    void add_token(TokenType, const T &literal);
+    void add_token(TokenType type, const T &literal);
 
     char advance();
 
@@ -34,11 +34,17 @@ private:
 
     char peek() const;
 
+    char peek_next() const;
+
     bool at_end() const;
+
+    void scan_string();
+
+    void scan_number();
 };
 
 template <typename T>
-void Scanner::add_token(TokenType, const T &literal)
+void Scanner::add_token(TokenType type, const T &literal)
 {
     tokens.push_back(Token(type, source.substr(start, current - start), literal, line));
 }
