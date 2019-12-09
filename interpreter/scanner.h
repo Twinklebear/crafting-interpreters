@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "token.h"
 
@@ -12,6 +13,25 @@ struct Scanner {
     int start = 0;
     int current = 0;
     int line = 1;
+
+    std::unordered_map<std::string, TokenType> reserved_words = {
+        {"and", TokenType::AND},
+        {"class", TokenType::CLASS},
+        {"else", TokenType::ELSE},
+        {"false", TokenType::FALSE},
+        {"fun", TokenType::FUN},
+        {"for", TokenType::FOR},
+        {"if", TokenType::IF},
+        {"nil", TokenType::NIL},
+        {"or", TokenType::OR},
+        {"print", TokenType::PRINT},
+        {"return", TokenType::RETURN},
+        {"super", TokenType::SUPER},
+        {"this", TokenType::THIS},
+        {"true", TokenType::TRUE},
+        {"var", TokenType::VAR},
+        {"while", TokenType::WHILE},
+    };
 
     Scanner() = default;
     Scanner(const std::string &source);
@@ -41,6 +61,8 @@ private:
     void scan_string();
 
     void scan_number();
+
+    void scan_identifier();
 };
 
 template <typename T>

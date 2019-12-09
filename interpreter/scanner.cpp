@@ -86,6 +86,8 @@ void Scanner::scan_token()
     default:
         if (std::isdigit(c)) {
             scan_number();
+        } else if (std::isalpha(c) || c == '_') {
+            scan_identifier();
         } else {
             error(line, "Unrecognized character '" + std::string(1, c) + "'");
         }
@@ -168,5 +170,23 @@ void Scanner::scan_number()
     }
 
     add_token(TokenType::NUMBER, std::stof(source.substr(start, current - start)));
+}
+
+void Scanner::scan_identifier()
+{
+    // Scan the entire identifier
+    while (std::isalpha(peek()) || std::isdigit(peek()) || peek() == '_') {
+        advance();
+    }
+
+    // Check if it's a reserved word
+    const std::string ident = source.substr(start, current - start);
+    TokenType type = TokenType::IDENTIFIER;
+    auto fnd = reserved_words.find(ident);
+    if (fnd != reserved_words.end()) {
+        type = fnd->second;
+    }
+
+    add_token(type, ident);
 }
 
