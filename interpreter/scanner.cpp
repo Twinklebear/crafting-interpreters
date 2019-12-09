@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include <cctype>
+#include <iostream>
 #include "util.h"
 
 Scanner::Scanner(const std::string &source) : source(source) {}
@@ -69,6 +70,16 @@ void Scanner::scan_token()
             while (peek() != '\n' && !at_end()) {
                 advance();
             }
+        } else if (match('*')) {
+            // Skip entire block comments, but do not support nesting
+            while ((peek() != '*' || peek_next() != '/') && !at_end()) {
+                if (peek() == '\n') {
+                    ++line;
+                }
+                advance();
+            }
+            // Skip the block close
+            current += 2;
         } else {
             add_token(TokenType::SLASH);
         }
