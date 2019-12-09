@@ -4,10 +4,11 @@
 #include <vector>
 #include "scanner.h"
 #include "util.h"
+#include "token.h"
 
 void run_file(const std::string &file);
 void run_prompt();
-void run(const std::string &text);
+void run(const std::string &source);
 
 int main(int argc, char **argv)
 {
@@ -29,6 +30,9 @@ void run_file(const std::string &file)
 {
     try {
         run(get_file_content(file));
+        if (had_error) {
+            std::exit(1);
+        }
     } catch (const std::runtime_error &e) {
         std::cout << "interpreter error: " << e.what() << "\n";
         std::exit(1);
@@ -42,11 +46,17 @@ void run_prompt()
     while (std::getline(std::cin, line)) {
         run(line);
         std::cout << "> ";
+        had_error = false;
     }
 }
 
-void run(const std::string &text)
+void run(const std::string &source)
 {
-    std::cout << "Running: " << text << "\n";
+    Scanner scanner(source);
+    const auto &tokens = scanner.scan_tokens();
+
+    for (const auto &t : tokens) {
+        std::cout << t << "\n";
+    }
 }
 
