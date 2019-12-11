@@ -2,9 +2,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "ast_printer.h"
+#include "expr.h"
 #include "scanner.h"
-#include "util.h"
 #include "token.h"
+#include "util.h"
 
 void run_file(const std::string &file);
 void run_prompt();
@@ -16,6 +18,15 @@ int main(int argc, char **argv)
         std::cout << "Usage: interpreter [script]\n";
         return 1;
     }
+
+    auto expr = std::make_shared<Binary>(
+        std::make_shared<Unary>(Token(TokenType::MINUS, "-", 1),
+                                std::make_shared<Literal>(std::any(123.f))),
+        Token(TokenType::STAR, "*", 1),
+        std::make_shared<Grouping>(std::make_shared<Literal>(std::any(45.67f))));
+    ASTPrinter printer;
+    std::cout << printer.print(*expr) << "\n";
+    return 0;
 
     if (argc == 2) {
         run_file(argv[1]);

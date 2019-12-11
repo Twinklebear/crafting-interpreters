@@ -6,7 +6,7 @@ if (NOT WIN32)
 endif()
 
 add_executable(interpreter main.cpp util.cpp scanner.cpp
-    token.cpp)
+    token.cpp expr.cpp ast_printer.cpp)
 
 set_target_properties(interpreter PROPERTIES
 	CXX_STANDARD 17
