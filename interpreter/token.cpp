@@ -7,127 +7,95 @@ Token::Token(TokenType type, const std::string &lexeme, int line)
 {
 }
 
-std::ostream &operator<<(std::ostream &os, const TokenType &t)
+std::string to_string(const TokenType &t)
 {
     switch (t) {
     case TokenType::LEFT_PAREN:
-        os << "LEFT_PAREN";
-        break;
+        return "LEFT_PAREN";
     case TokenType::RIGHT_PAREN:
-        os << "RIGHT_PAREN";
-        break;
+        return "RIGHT_PAREN";
     case TokenType::LEFT_BRACE:
-        os << "LEFT_BRACE";
-        break;
+        return "LEFT_BRACE";
     case TokenType::RIGHT_BRACE:
-        os << "RIGHT_BRACE";
-        break;
+        return "RIGHT_BRACE";
     case TokenType::COMMA:
-        os << "COMMA";
-        break;
+        return "COMMA";
     case TokenType::DOT:
-        os << "DOT";
-        break;
+        return "DOT";
     case TokenType::MINUS:
-        os << "MINUS";
-        break;
+        return "MINUS";
     case TokenType::PLUS:
-        os << "PLUS";
-        break;
+        return "PLUS";
     case TokenType::SEMICOLON:
-        os << "SEMICOLON";
-        break;
+        return "SEMICOLON";
     case TokenType::SLASH:
-        os << "SLASH";
-        break;
+        return "SLASH";
     case TokenType::STAR:
-        os << "STAR";
-        break;
+        return "STAR";
     case TokenType::BANG:
-        os << "BANG";
-        break;
+        return "BANG";
     case TokenType::BANG_EQUAL:
-        os << "BANG_EQUAL";
-        break;
+        return "BANG_EQUAL";
     case TokenType::EQUAL:
-        os << "EQUAL";
-        break;
+        return "EQUAL";
     case TokenType::EQUAL_EQUAL:
-        os << "EQUAL_EQUAL";
-        break;
+        return "EQUAL_EQUAL";
     case TokenType::GREATER:
-        os << "GREATER";
-        break;
+        return "GREATER";
     case TokenType::GREATER_EQUAL:
-        os << "GREATER_EQUAL";
-        break;
+        return "GREATER_EQUAL";
     case TokenType::LESS:
-        os << "LESS";
-        break;
+        return "LESS";
     case TokenType::LESS_EQUAL:
-        os << "LESS_EQUAL";
-        break;
+        return "LESS_EQUAL";
     case TokenType::IDENTIFIER:
-        os << "IDENTIFIER";
-        break;
+        return "IDENTIFIER";
     case TokenType::STRING:
-        os << "STRING";
-        break;
+        return "STRING";
     case TokenType::NUMBER:
-        os << "NUMBER";
-        break;
+        return "NUMBER";
     case TokenType::AND:
-        os << "AND";
-        break;
+        return "AND";
     case TokenType::CLASS:
-        os << "CLASS";
-        break;
+        return "CLASS";
     case TokenType::ELSE:
-        os << "ELSE";
-        break;
+        return "ELSE";
     case TokenType::FALSE:
-        os << "FALSE";
-        break;
+        return "FALSE";
     case TokenType::FUN:
-        os << "FUN";
-        break;
+        return "FUN";
     case TokenType::FOR:
-        os << "FOR";
-        break;
+        return "FOR";
     case TokenType::IF:
-        os << "IF";
-        break;
+        return "IF";
     case TokenType::NIL:
-        os << "NIL";
-        break;
+        return "NIL";
     case TokenType::OR:
-        os << "OR";
-        break;
+        return "OR";
     case TokenType::PRINT:
-        os << "PRINT";
-        break;
+        return "PRINT";
     case TokenType::RETURN:
-        os << "RETURN";
-        break;
+        return "RETURN";
     case TokenType::SUPER:
-        os << "SUPER";
-        break;
+        return "SUPER";
     case TokenType::THIS:
-        os << "THIS";
-        break;
+        return "THIS";
     case TokenType::TRUE:
-        os << "TRUE";
-        break;
+        return "TRUE";
     case TokenType::VAR:
-        os << "VAR";
-        break;
+        return "VAR";
     case TokenType::WHILE:
-        os << "WHILE";
-        break;
+        return "WHILE";
     case TokenType::END_OF_FILE:
-        os << "END_OF_FILE";
-        break;
+        return "END_OF_FILE";
+    default:
+        return "UNRECOGNIZED TOKEN!";
     }
+}
+
+std::ostream &operator<<(std::ostream &os, const TokenType &t)
+{
+    os << to_string(t);
     return os;
 }
 

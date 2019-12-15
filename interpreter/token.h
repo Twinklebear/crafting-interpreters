@@ -76,6 +76,8 @@ Token::Token(TokenType type, const std::string &lexeme, const T &literal, int li
 {
 }
 
+std::string to_string(const TokenType &t);
+
 std::ostream& operator<<(std::ostream &os, const TokenType &t);
 
 std::ostream &operator<<(std::ostream &os, const Token &t);

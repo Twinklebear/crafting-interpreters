@@ -28,13 +28,13 @@ void ASTPrinter::visit(const Literal &l)
 }
 void ASTPrinter::visit(const Unary &u)
 {
-    text += "(" + u.op.lexeme + " ";
+    text += "(" + to_string(u.op.type) + " '" + u.op.lexeme + "' ";
     u.expr->accept(*this);
     text += ")";
 }
 void ASTPrinter::visit(const Binary &b)
 {
-    text += "(" + b.op.lexeme + " ";
+    text += "(" + to_string(b.op.type) + " '" + b.op.lexeme + "' ";
     b.left->accept(*this);
     text += " ";
     b.right->accept(*this);
