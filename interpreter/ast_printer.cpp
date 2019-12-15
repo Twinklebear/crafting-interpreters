@@ -21,6 +21,8 @@ void ASTPrinter::visit(const Literal &l)
             text += std::to_string(std::any_cast<float>(l.value));
         } else if (l.value.type() == typeid(std::string)) {
             text += std::any_cast<std::string>(l.value);
+        } else if (l.value.type() == typeid(bool)) {
+            text += std::any_cast<bool>(l.value) ? "true" : "false";
         }
     } else {
         text += "nil";

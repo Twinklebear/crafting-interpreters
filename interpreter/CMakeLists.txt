@@ -17,6 +17,7 @@ add_executable(interpreter
     scanner.cpp
     token.cpp
     ast_printer.cpp
+    parser.cpp
    ${CMAKE_CURRENT_BINARY_DIR}/expr.cpp)
 
 target_include_directories(interpreter PUBLIC

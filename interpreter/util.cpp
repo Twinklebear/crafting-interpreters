@@ -23,6 +23,16 @@ void report(int line, const std::string &where, const std::string &msg)
 
 void error(int line, const std::string &msg)
 {
+    had_error = true;
     report(line, "", msg);
 }
 
+void error(const Token &t, const std::string &msg)
+{
+    had_error = true;
+    if (t.type == TokenType::END_OF_FILE) {
+        report(t.line, " at end of file", msg);
+    } else {
+        report(t.line, " at '" + t.lexeme + "'", msg);
+    }
+}

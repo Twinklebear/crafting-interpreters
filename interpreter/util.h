@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "token.h"
 
 extern bool had_error;
 
@@ -10,3 +11,4 @@ void report(int line, const std::string &where, const std::string &msg);
 
 void error(int line, const std::string &msg);
 
+void error(const Token &t, const std::string &msg);
