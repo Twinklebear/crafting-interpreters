@@ -8,7 +8,8 @@ endif()
 find_package(Python COMPONENTS Interpreter)
 
 add_custom_command(OUTPUT expr.cpp
-    COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/gen_expr.py ${CMAKE_CURRENT_BINARY_DIR}/expr
+    COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/gen_expr.py
+        ${CMAKE_CURRENT_BINARY_DIR}/expr
     DEPENDS ${CMAKE_CURRENT_LIST_DIR}/gen_expr.py)
 
 add_executable(interpreter
@@ -18,6 +19,7 @@ add_executable(interpreter
     token.cpp
     ast_printer.cpp
     parser.cpp
+    interpreter.cpp
    ${CMAKE_CURRENT_BINARY_DIR}/expr.cpp)
 
 target_include_directories(interpreter PUBLIC

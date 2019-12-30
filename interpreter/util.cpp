@@ -36,3 +36,21 @@ void error(const Token &t, const std::string &msg)
         report(t.line, " at '" + t.lexeme + "'", msg);
     }
 }
+
+std::string pretty_type_name(const std::type_info &t)
+{
+    if (t == typeid(float)) {
+        return "float";
+    }
+    if (t == typeid(std::string)) {
+        return "string";
+    }
+    if (t == typeid(bool)) {
+        return "bool";
+    }
+    if (t == typeid(void)) {
+        return "nil";
+    }
+    return std::string("UNHANDLED TYPE ") + t.name();
+}
+

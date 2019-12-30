@@ -4,6 +4,7 @@
 #include <vector>
 #include "ast_printer.h"
 #include "expr.h"
+#include "interpreter.h"
 #include "parser.h"
 #include "scanner.h"
 #include "token.h"
@@ -71,5 +72,26 @@ void run(const std::string &source)
 
     ASTPrinter printer;
     std::cout << "AST: " << printer.print(*expr) << "\n";
+
+    Interpreter interpreter;
+    try {
+        std::any result = interpreter.evaluate(*expr);
+        std::cout << "Result: ";
+        if (result.has_value()) {
+            if (result.type() == typeid(float)) {
+                std::cout << std::any_cast<float>(result) << "\n";
+            } else if (result.type() == typeid(std::string)) {
+                std::cout << std::any_cast<std::string>(result) << "\n";
+            } else if (result.type() == typeid(bool)) {
+                std::cout << std::any_cast<bool>(result) << "\n";
+            } else {
+                std::cout << "[error]: Unsupported result type!?\n";
+            }
+        } else {
+            std::cout << "nil";
+        }
+    } catch (const InterpreterError &e) {
+        error(e.token, e.message);
+    }
 }
 

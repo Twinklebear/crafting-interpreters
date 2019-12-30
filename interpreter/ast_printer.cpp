@@ -14,6 +14,7 @@ void ASTPrinter::visit(const Grouping &g)
     g.expr->accept(*this);
     text += ")";
 }
+
 void ASTPrinter::visit(const Literal &l)
 {
     if (l.value.has_value()) {
@@ -28,12 +29,14 @@ void ASTPrinter::visit(const Literal &l)
         text += "nil";
     }
 }
+
 void ASTPrinter::visit(const Unary &u)
 {
     text += "(" + to_string(u.op.type) + " '" + u.op.lexeme + "' ";
     u.expr->accept(*this);
     text += ")";
 }
+
 void ASTPrinter::visit(const Binary &b)
 {
     text += "(" + to_string(b.op.type) + " '" + b.op.lexeme + "' ";
