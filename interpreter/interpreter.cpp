@@ -75,6 +75,9 @@ void Interpreter::visit(const Binary &b)
     case TokenType::SLASH:
         check_same_type(left, right, b.op);
         check_type(left, {float_id}, b.op);
+        if (std::any_cast<float>(right) == 0.f) {
+            throw InterpreterError(b.op, "Division by 0");
+        }
         result = std::any_cast<float>(left) / std::any_cast<float>(right);
         break;
     case TokenType::STAR:
