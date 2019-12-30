@@ -37,6 +37,11 @@ void error(const Token &t, const std::string &msg)
     }
 }
 
+std::string pretty_type_name(const std::any &t)
+{
+    return pretty_type_name(t.type());
+}
+
 std::string pretty_type_name(const std::type_info &t)
 {
     if (t == typeid(float)) {
@@ -53,4 +58,3 @@ std::string pretty_type_name(const std::type_info &t)
     }
     return std::string("UNHANDLED TYPE ") + t.name();
 }
-

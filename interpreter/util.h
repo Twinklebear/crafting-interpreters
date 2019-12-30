@@ -13,5 +13,6 @@ void error(int line, const std::string &msg);
 
 void error(const Token &t, const std::string &msg);
 
-std::string pretty_type_name(const std::type_info &t);
+std::string pretty_type_name(const std::any &t);
 
+std::string pretty_type_name(const std::type_info &t);
