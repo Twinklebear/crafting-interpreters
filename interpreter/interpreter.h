@@ -1,8 +1,8 @@
 #pragma once
 
-#include <unordered_map>
-#include <typeinfo>
 #include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 #include <vector>
 #include "expr.h"
 
@@ -36,5 +36,9 @@ private:
                     const Token &t);
 
     // Check if the two anys have the same type, if not throws an InterpreterError
-    void check_same_type(const std::any &a, const std::any &b, const Token &t);
+    void check_same_type(const std::any &a, const std::any &b, const Token &t) const;
+
+    bool is_true(const std::any &x) const;
+
+    bool is_equal(const std::any &a, const std::any &b) const;
 };

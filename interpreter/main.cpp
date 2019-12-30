@@ -83,7 +83,7 @@ void run(const std::string &source)
             } else if (result.type() == typeid(std::string)) {
                 std::cout << std::any_cast<std::string>(result) << "\n";
             } else if (result.type() == typeid(bool)) {
-                std::cout << std::any_cast<bool>(result) << "\n";
+                std::cout << (std::any_cast<bool>(result) ? "true" : "false") << "\n";
             } else {
                 std::cout << "[error]: Unsupported result type!?\n";
             }
