@@ -7,6 +7,15 @@ InterpreterError::InterpreterError(const Token &t, const std::string &msg)
 {
 }
 
+void Interpreter::evaluate(const std::vector<std::shared_ptr<Stmt>> &statements)
+{
+    result = std::any();
+    for (const auto &st : statements) {
+        st->accept(*this);
+        result = std::any();
+    }
+}
+
 const std::any &Interpreter::evaluate(const Expr &expr)
 {
     result = std::any();
@@ -114,6 +123,30 @@ void Interpreter::visit(const Binary &b)
     default:
         break;
     }
+}
+
+void Interpreter::visit(const Expression &e)
+{
+    std::cout << "TODO: " << __PRETTY_FUNCTION__ << "\n";
+}
+
+void Interpreter::visit(const Print &p)
+{
+    std::any val = evaluate(*p.expr);
+    if (val.has_value()) {
+        if (val.type() == typeid(float)) {
+            std::cout << std::any_cast<float>(val) << "\n";
+        } else if (val.type() == typeid(std::string)) {
+            std::cout << std::any_cast<std::string>(val) << "\n";
+        } else if (val.type() == typeid(bool)) {
+            std::cout << (std::any_cast<bool>(val) ? "true" : "false") << "\n";
+        } else {
+            std::cout << "[error]: Unsupported val type!?\n";
+        }
+    } else {
+        std::cout << "nil";
+    }
+    result = std::any();
 }
 
 void Interpreter::check_type(const std::any &val,

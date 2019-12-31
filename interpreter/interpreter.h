@@ -13,17 +13,20 @@ struct InterpreterError {
     InterpreterError(const Token &t, const std::string &msg);
 };
 
-struct Interpreter : public Visitor {
+struct Interpreter : Expr::Visitor, Stmt::Visitor {
     std::any result;
 
     Interpreter();
 
+    void evaluate(const std::vector<std::shared_ptr<Stmt>> &statements);
     const std::any &evaluate(const Expr &expr);
 
     void visit(const Grouping &g) override;
     void visit(const Literal &l) override;
     void visit(const Unary &u) override;
     void visit(const Binary &b) override;
+    void visit(const Expression &e) override;
+    void visit(const Print &p) override;
 
 private:
     std::type_index float_id, string_id, bool_id, nil_id;

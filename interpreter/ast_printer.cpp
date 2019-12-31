@@ -46,3 +46,26 @@ void ASTPrinter::visit(const Binary &b)
     text += ")";
 }
 
+const std::string &ProgramPrinter::print(const std::vector<std::shared_ptr<Stmt>> &statements)
+{
+    text = "";
+    for (const auto &st : statements) {
+        st->accept(*this);
+        text += "\n";
+    }
+    return text;
+}
+
+void ProgramPrinter::visit(const Expression &e)
+{
+    text += "{EXPRESSION Stmt ";
+    ASTPrinter ast_printer;
+    text += ast_printer.print(*e.expr) + "}";
+}
+
+void ProgramPrinter::visit(const Print &p)
+{
+    text += "{PRINT Stmt ";
+    ASTPrinter ast_printer;
+    text += ast_printer.print(*p.expr) + "}";
+}

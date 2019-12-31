@@ -3,6 +3,10 @@
 #include <string>
 #include "token.h"
 
+#ifdef _MSC_VER
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
 extern bool had_error;
 
 std::string get_file_content(const std::string &fname);

@@ -21,9 +21,15 @@ struct Parser {
     Parser() = default;
     Parser(const std::vector<Token> &tokens);
 
-    std::shared_ptr<Expr> parse();
+    std::vector<std::shared_ptr<Stmt>> parse();
 
 private:
+    std::shared_ptr<Stmt> statement();
+
+    std::shared_ptr<Stmt> print_statement();
+
+    std::shared_ptr<Stmt> expression_statement();
+
     std::shared_ptr<Expr> expression();
 
     std::shared_ptr<Expr> equality();

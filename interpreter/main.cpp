@@ -64,32 +64,18 @@ void run(const std::string &source)
     }
 
     Parser parser(tokens);
-    const auto expr = parser.parse();
+    const auto statements = parser.parse();
 
     if (had_error) {
         return;
     }
 
-    ASTPrinter printer;
-    std::cout << "AST: " << printer.print(*expr) << "\n";
+    ProgramPrinter printer;
+    std::cout << "Program:\n" << printer.print(statements) << "------\n";
 
     Interpreter interpreter;
     try {
-        std::any result = interpreter.evaluate(*expr);
-        std::cout << "Result: ";
-        if (result.has_value()) {
-            if (result.type() == typeid(float)) {
-                std::cout << std::any_cast<float>(result) << "\n";
-            } else if (result.type() == typeid(std::string)) {
-                std::cout << std::any_cast<std::string>(result) << "\n";
-            } else if (result.type() == typeid(bool)) {
-                std::cout << (std::any_cast<bool>(result) ? "true" : "false") << "\n";
-            } else {
-                std::cout << "[error]: Unsupported result type!?\n";
-            }
-        } else {
-            std::cout << "nil";
-        }
+        interpreter.evaluate(statements);
     } catch (const InterpreterError &e) {
         error(e.token, e.message);
     }
