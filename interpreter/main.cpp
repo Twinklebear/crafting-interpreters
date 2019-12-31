@@ -74,10 +74,6 @@ void run(const std::string &source)
     std::cout << "Program:\n" << printer.print(statements) << "------\n";
 
     Interpreter interpreter;
-    try {
-        interpreter.evaluate(statements);
-    } catch (const InterpreterError &e) {
-        error(e.token, e.message);
-    }
+    interpreter.evaluate(statements);
 }
 

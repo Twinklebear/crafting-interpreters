@@ -10,9 +10,13 @@ InterpreterError::InterpreterError(const Token &t, const std::string &msg)
 void Interpreter::evaluate(const std::vector<std::shared_ptr<Stmt>> &statements)
 {
     result = std::any();
-    for (const auto &st : statements) {
-        st->accept(*this);
-        result = std::any();
+    try {
+        for (const auto &st : statements) {
+            st->accept(*this);
+            result = std::any();
+        }
+    } catch (const InterpreterError &e) {
+        error(e.token, e.message);
     }
 }
 
