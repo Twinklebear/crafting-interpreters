@@ -12,7 +12,7 @@
 
 void run_file(const std::string &file);
 void run_prompt();
-void run(const std::string &source);
+void run(const std::string &source, Interpreter &interpreter);
 
 int main(int argc, char **argv)
 {
@@ -33,7 +33,8 @@ int main(int argc, char **argv)
 void run_file(const std::string &file)
 {
     try {
-        run(get_file_content(file));
+        Interpreter interpreter;
+        run(get_file_content(file), interpreter);
         if (had_error) {
             std::exit(1);
         }
@@ -47,14 +48,15 @@ void run_prompt()
 {
     std::cout << "> ";
     std::string line;
+    Interpreter interpreter;
     while (std::getline(std::cin, line)) {
-        run(line);
+        run(line, interpreter);
         std::cout << "> ";
         had_error = false;
     }
 }
 
-void run(const std::string &source)
+void run(const std::string &source, Interpreter &interpreter)
 {
     Scanner scanner(source);
     const auto &tokens = scanner.scan_tokens();
@@ -73,7 +75,6 @@ void run(const std::string &source)
     ProgramPrinter printer;
     std::cout << "Program:\n" << printer.print(statements) << "------\n";
 
-    Interpreter interpreter;
     interpreter.evaluate(statements);
 }
 

@@ -4,6 +4,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include "environment.h"
 #include "expr.h"
 
 struct InterpreterError {
@@ -14,6 +15,7 @@ struct InterpreterError {
 };
 
 struct Interpreter : Expr::Visitor, Stmt::Visitor {
+    Environment environment;
     std::any result;
 
     Interpreter();
@@ -25,8 +27,11 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Literal &l) override;
     void visit(const Unary &u) override;
     void visit(const Binary &b) override;
+    void visit(const Variable &v) override;
+
     void visit(const Expression &e) override;
     void visit(const Print &p) override;
+    void visit(const Var &v) override;
 
 private:
     std::type_index float_id, string_id, bool_id, nil_id;

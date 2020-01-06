@@ -46,6 +46,11 @@ void ASTPrinter::visit(const Binary &b)
     text += ")";
 }
 
+void ASTPrinter::visit(const Variable &v)
+{
+    text += "(variable '" + v.name.lexeme + "')";
+}
+
 const std::string &ProgramPrinter::print(const std::vector<std::shared_ptr<Stmt>> &statements)
 {
     text = "";
@@ -68,4 +73,14 @@ void ProgramPrinter::visit(const Print &p)
     text += "{PRINT Stmt ";
     ASTPrinter ast_printer;
     text += ast_printer.print(*p.expr) + "}";
+}
+
+void ProgramPrinter::visit(const Var &v)
+{
+    text += "{VAR Stmt '" + v.token.lexeme + "'";
+    if (v.initializer) {
+        ASTPrinter ast_printer;
+        text += " = " + ast_printer.print(*v.initializer);
+    }
+    text += "}";
 }

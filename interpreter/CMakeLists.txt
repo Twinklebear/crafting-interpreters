@@ -20,7 +20,8 @@ add_executable(interpreter
     ast_printer.cpp
     parser.cpp
     interpreter.cpp
-   ${CMAKE_CURRENT_BINARY_DIR}/expr.cpp)
+    environment.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/expr.cpp)
 
 target_include_directories(interpreter PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}

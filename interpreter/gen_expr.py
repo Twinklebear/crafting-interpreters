@@ -46,12 +46,16 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
         "Binary": ["std::shared_ptr<Expr> left", "Token op", "std::shared_ptr<Expr> right"],
         "Grouping": ["std::shared_ptr<Expr> expr"],
         "Literal": ["std::any value"],
-        "Unary": ["Token op", "std::shared_ptr<Expr> expr"]
+        "Unary": ["Token op", "std::shared_ptr<Expr> expr"],
+        "Variable": ["Token name"]
     }
+
     statements = {
         "Expression": ["std::shared_ptr<Expr> expr"],
-        "Print": ["std::shared_ptr<Expr> expr"]
+        "Print": ["std::shared_ptr<Expr> expr"],
+        "Var": ["Token token", "std::shared_ptr<Expr> initializer"]
     }
+
     define_ast(header, cpp, "Expr", expressions)
     define_ast(header, cpp, "Stmt", statements)
 

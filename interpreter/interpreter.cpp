@@ -129,6 +129,15 @@ void Interpreter::visit(const Binary &b)
     }
 }
 
+void Interpreter::visit(const Variable &v)
+{
+    try {
+        result = environment.get(v.name.lexeme);
+    } catch (const std::runtime_error &e) {
+        throw InterpreterError(v.name, "Undefined variable");
+    }
+}
+
 void Interpreter::visit(const Expression &e)
 {
     std::cout << "TODO: " << __PRETTY_FUNCTION__ << "\n";
@@ -150,6 +159,18 @@ void Interpreter::visit(const Print &p)
     } else {
         std::cout << "nil";
     }
+    result = std::any();
+}
+
+void Interpreter::visit(const Var &v)
+{
+    std::any initializer;
+    if (v.initializer) {
+        initializer = evaluate(*v.initializer);
+    }
+
+    environment.define(v.token.lexeme, initializer);
+
     result = std::any();
 }
 
