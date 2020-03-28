@@ -47,6 +47,9 @@ std::shared_ptr<Stmt> Parser::statement()
     if (match({TokenType::PRINT})) {
         return print_statement();
     }
+    if (match({TokenType::LEFT_BRACE})) {
+        return block_statement();
+    }
     return expression_statement();
 }
 
@@ -62,6 +65,16 @@ std::shared_ptr<Stmt> Parser::expression_statement()
     auto value = expression();
     consume(TokenType::SEMICOLON, "Expected ; after print statement");
     return std::make_shared<Expression>(value);
+}
+
+std::shared_ptr<Stmt> Parser::block_statement()
+{
+    std::vector<std::shared_ptr<Stmt>> statements;
+    while (!check(TokenType::RIGHT_BRACE) && !at_end()) {
+        statements.push_back(declaration());
+    }
+    consume(TokenType::RIGHT_BRACE, "Expect '}' closing block");
+    return std::make_shared<Block>(statements);
 }
 
 std::shared_ptr<Expr> Parser::expression()

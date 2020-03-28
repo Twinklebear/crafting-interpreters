@@ -148,6 +148,12 @@ void Interpreter::visit(const Assign &a)
     }
 }
 
+void Interpreter::visit(const Block &b)
+{
+    execute_block(b.statements, Environment(environment));
+    result = std::any();
+}
+
 void Interpreter::visit(const Expression &e)
 {
     evaluate(*e.expr);
@@ -183,6 +189,15 @@ void Interpreter::visit(const Var &v)
     environment.define(v.token.lexeme, initializer);
 
     result = std::any();
+}
+
+void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
+                                Environment &env)
+{
+    Environment prev = environment;
+    environment = env;
+    evaluate(statements);
+    environment = prev;
 }
 
 void Interpreter::check_type(const std::any &val,

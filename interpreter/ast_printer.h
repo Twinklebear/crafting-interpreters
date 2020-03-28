@@ -22,6 +22,7 @@ struct ProgramPrinter : Stmt::Visitor {
 
     const std::string &print(const std::vector<std::shared_ptr<Stmt>> &statements);
 
+    void visit(const Block &b) override;
     void visit(const Expression &e) override;
     void visit(const Print &p) override;
     void visit(const Var &v) override;

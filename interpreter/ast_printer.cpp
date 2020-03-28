@@ -68,6 +68,14 @@ const std::string &ProgramPrinter::print(const std::vector<std::shared_ptr<Stmt>
     return text;
 }
 
+void ProgramPrinter::visit(const Block &b)
+{
+    text += "{BLOCK Stmt\n";
+    ProgramPrinter printer;
+    text += printer.print(b.statements);
+    text += "}";
+}
+
 void ProgramPrinter::visit(const Expression &e)
 {
     text += "{EXPRESSION Stmt ";

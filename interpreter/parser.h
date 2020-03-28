@@ -34,6 +34,8 @@ private:
 
     std::shared_ptr<Stmt> expression_statement();
 
+    std::shared_ptr<Stmt> block_statement();
+
     std::shared_ptr<Expr> expression();
 
     std::shared_ptr<Expr> assignment();

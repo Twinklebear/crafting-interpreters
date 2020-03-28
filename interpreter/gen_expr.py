@@ -39,7 +39,7 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as cpp:
-    header.write("#pragma once\n#include <any>\n#include \"token.h\"\n")
+    header.write("#pragma once\n#include <any>\n#include <vector>\n#include \"token.h\"\n")
     cpp.write("#include \"{}.h\"\n".format(sys.argv[1]))
 
     expressions = {
@@ -52,6 +52,7 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
     }
 
     statements = {
+        "Block": ["std::vector<std::shared_ptr<Stmt>> statements"],
         "Expression": ["std::shared_ptr<Expr> expr"],
         "Print": ["std::shared_ptr<Expr> expr"],
         "Var": ["Token token", "std::shared_ptr<Expr> initializer"]

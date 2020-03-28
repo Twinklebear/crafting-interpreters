@@ -30,6 +30,7 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Variable &v) override;
     void visit(const Assign &a) override;
 
+    void visit(const Block &b) override;
     void visit(const Expression &e) override;
     void visit(const Print &p) override;
     void visit(const Var &v) override;
@@ -37,6 +38,8 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
 private:
     std::type_index float_id, string_id, bool_id, nil_id;
     std::unordered_map<std::type_index, std::string> type_names;
+
+    void execute_block(const std::vector<std::shared_ptr<Stmt>> &statements, Environment &env);
 
     // Check if the type is one of the specified valid types, if not throws an
     // InterpreterError
