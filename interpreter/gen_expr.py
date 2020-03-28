@@ -43,6 +43,7 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
     cpp.write("#include \"{}.h\"\n".format(sys.argv[1]))
 
     expressions = {
+        "Assign": ["Token name", "std::shared_ptr<Expr> value"],
         "Binary": ["std::shared_ptr<Expr> left", "Token op", "std::shared_ptr<Expr> right"],
         "Grouping": ["std::shared_ptr<Expr> expr"],
         "Literal": ["std::any value"],

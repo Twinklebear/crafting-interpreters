@@ -14,6 +14,7 @@ struct ASTPrinter : Expr::Visitor {
     void visit(const Unary &u) override;
     void visit(const Binary &b) override;
     void visit(const Variable &v) override;
+    void visit(const Assign &a) override;
 };
 
 struct ProgramPrinter : Stmt::Visitor {

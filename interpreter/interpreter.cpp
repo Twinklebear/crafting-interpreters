@@ -138,9 +138,16 @@ void Interpreter::visit(const Variable &v)
     }
 }
 
+void Interpreter::visit(const Assign &a)
+{
+    result = evaluate(*a.value);
+    environment.assign(a.name.lexeme, result);
+}
+
 void Interpreter::visit(const Expression &e)
 {
-    std::cout << "TODO: " << __PRETTY_FUNCTION__ << "\n";
+    evaluate(*e.expr);
+    result = std::any();
 }
 
 void Interpreter::visit(const Print &p)

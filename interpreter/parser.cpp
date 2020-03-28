@@ -66,7 +66,23 @@ std::shared_ptr<Stmt> Parser::expression_statement()
 
 std::shared_ptr<Expr> Parser::expression()
 {
-    return equality();
+    return assignment();
+}
+
+std::shared_ptr<Expr> Parser::assignment()
+{
+    auto expr = equality();
+
+    if (match({TokenType::EQUAL})) {
+        const Token &equals = previous();
+        auto value = assignment();
+
+        if (auto var = std::dynamic_pointer_cast<Variable>(expr)) {
+            return std::make_shared<Assign>(var->name, value);
+        }
+        error(equals, "Expected expression");
+    }
+    return expr;
 }
 
 std::shared_ptr<Expr> Parser::equality()

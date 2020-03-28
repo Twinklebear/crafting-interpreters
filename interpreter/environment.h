@@ -10,5 +10,7 @@ class Environment {
 public:
     void define(const std::string &name, const std::any &val);
 
+    void assign(const std::string &name, const std::any &val);
+
     std::any get(const std::string &name) const;
 };

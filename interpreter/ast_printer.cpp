@@ -51,6 +51,13 @@ void ASTPrinter::visit(const Variable &v)
     text += "(variable '" + v.name.lexeme + "')";
 }
 
+void ASTPrinter::visit(const Assign &a)
+{
+    text += "(assignment '" + a.name.lexeme + "' = ";
+    a.value->accept(*this);
+    text += ")";
+}
+
 const std::string &ProgramPrinter::print(const std::vector<std::shared_ptr<Stmt>> &statements)
 {
     text = "";

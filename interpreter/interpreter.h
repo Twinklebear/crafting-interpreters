@@ -28,6 +28,7 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Unary &u) override;
     void visit(const Binary &b) override;
     void visit(const Variable &v) override;
+    void visit(const Assign &a) override;
 
     void visit(const Expression &e) override;
     void visit(const Print &p) override;
