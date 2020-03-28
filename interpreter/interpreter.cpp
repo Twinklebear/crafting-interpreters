@@ -141,7 +141,11 @@ void Interpreter::visit(const Variable &v)
 void Interpreter::visit(const Assign &a)
 {
     result = evaluate(*a.value);
-    environment.assign(a.name.lexeme, result);
+    try {
+        environment.assign(a.name.lexeme, result);
+    } catch (const std::runtime_error &) {
+        throw InterpreterError(a.name, "Undefined variable");
+    }
 }
 
 void Interpreter::visit(const Expression &e)
