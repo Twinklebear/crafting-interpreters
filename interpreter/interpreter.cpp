@@ -133,7 +133,7 @@ void Interpreter::visit(const Variable &v)
 {
     try {
         result = environment.get(v.name.lexeme);
-    } catch (const std::runtime_error &e) {
+    } catch (const std::runtime_error &) {
         throw InterpreterError(v.name, "Undefined variable");
     }
 }
