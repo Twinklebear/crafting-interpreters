@@ -11,6 +11,7 @@ def define_ast(header, cpp, base_name, types):
     header.write("struct Visitor {\n")
     for expr, args in types.items():
         header.write("virtual void visit(const {} &) = 0;\n".format(expr))
+    header.write("virtual ~Visitor(){}")
     header.write("};\n")
 
     header.write("virtual void accept(Visitor &v) const = 0;\n")
@@ -22,6 +23,7 @@ def define_ast(header, cpp, base_name, types):
             header.write("{};".format(a))
         header.write("{}({});\n".format(expr, ",".join(args)))
         header.write("void accept(Visitor &v) const override;")
+        header.write("virtual ~{}(){{}}".format(expr))
         header.write("};\n")
 
         cpp.write("{}::{}({}) : ".format(expr, expr, ",".join(args)))
@@ -61,5 +63,6 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
     define_ast(header, cpp, "Expr", expressions)
     define_ast(header, cpp, "Stmt", statements)
 
-subprocess.run(["clang-format.exe", "-i", sys.argv[1] + ".h", sys.argv[1] + ".cpp"])
+if os.getenv("CLANG_FORMAT"):
+    subprocess.run([os.getenv("CLANG_FORMAT"), "-i", sys.argv[1] + ".h", sys.argv[1] + ".cpp"])
 

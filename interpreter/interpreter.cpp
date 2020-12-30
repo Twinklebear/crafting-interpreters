@@ -150,7 +150,8 @@ void Interpreter::visit(const Assign &a)
 
 void Interpreter::visit(const Block &b)
 {
-    execute_block(b.statements, Environment(environment));
+    Environment env(environment);
+    execute_block(b.statements, env);
     result = std::any();
 }
 
