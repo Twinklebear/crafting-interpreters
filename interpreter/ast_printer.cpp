@@ -83,6 +83,21 @@ void ProgramPrinter::visit(const Expression &e)
     text += ast_printer.print(*e.expr) + "}";
 }
 
+void ProgramPrinter::visit(const If &f)
+{
+    text += "{IF Stmt, cond: ";
+    ASTPrinter ast_printer;
+    text += ast_printer.print(*f.condition) + "\nTHEN: ";
+    // TODO: would be nice for readability to add indentation here
+    ProgramPrinter then_printer;
+    text += then_printer.print({f.then_branch});
+    if (f.else_branch) {
+        ProgramPrinter else_printer;
+        text += "ELSE: " + else_printer.print({f.else_branch});
+    }
+    text += "}";
+}
+
 void ProgramPrinter::visit(const Print &p)
 {
     text += "{PRINT Stmt ";

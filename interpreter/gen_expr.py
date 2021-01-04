@@ -56,6 +56,8 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
     statements = {
         "Block": ["std::vector<std::shared_ptr<Stmt>> statements"],
         "Expression": ["std::shared_ptr<Expr> expr"],
+        "If": ["std::shared_ptr<Expr> condition", "std::shared_ptr<Stmt> then_branch",
+            "std::shared_ptr<Stmt> else_branch"],
         "Print": ["std::shared_ptr<Expr> expr"],
         "Var": ["Token token", "std::shared_ptr<Expr> initializer"]
     }

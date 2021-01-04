@@ -30,6 +30,8 @@ private:
 
     std::shared_ptr<Stmt> statement();
 
+    std::shared_ptr<Stmt> if_statement();
+
     std::shared_ptr<Stmt> print_statement();
 
     std::shared_ptr<Stmt> expression_statement();

@@ -44,6 +44,9 @@ std::shared_ptr<Stmt> Parser::var_declaration()
 
 std::shared_ptr<Stmt> Parser::statement()
 {
+    if (match({TokenType::IF})) {
+        return if_statement();
+    }
     if (match({TokenType::PRINT})) {
         return print_statement();
     }
@@ -51,6 +54,21 @@ std::shared_ptr<Stmt> Parser::statement()
         return block_statement();
     }
     return expression_statement();
+}
+
+std::shared_ptr<Stmt> Parser::if_statement()
+{
+    consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'");
+    auto condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after if condition");
+
+    auto then_branch = statement();
+    std::shared_ptr<Stmt> else_branch;
+    if (match({TokenType::ELSE})) {
+        else_branch = statement();
+    }
+
+    return std::make_shared<If>(condition, then_branch, else_branch);
 }
 
 std::shared_ptr<Stmt> Parser::print_statement()

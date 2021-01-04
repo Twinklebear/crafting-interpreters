@@ -161,6 +161,16 @@ void Interpreter::visit(const Expression &e)
     result = std::any();
 }
 
+void Interpreter::visit(const If &f)
+{
+    if (is_true(evaluate(*f.condition))) {
+        evaluate({f.then_branch});
+    } else if (f.else_branch) {
+        evaluate({f.else_branch});
+    }
+    result = std::any();
+}
+
 void Interpreter::visit(const Print &p)
 {
     std::any val = evaluate(*p.expr);
