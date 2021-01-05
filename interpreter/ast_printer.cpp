@@ -46,6 +46,15 @@ void ASTPrinter::visit(const Binary &b)
     text += ")";
 }
 
+void ASTPrinter::visit(const Logical &l)
+{
+    text += "(" + to_string(l.op.type) + " '" + l.op.lexeme + "' ";
+    l.left->accept(*this);
+    text += " ";
+    l.right->accept(*this);
+    text += ")";
+}
+
 void ASTPrinter::visit(const Variable &v)
 {
     text += "(variable '" + v.name.lexeme + "')";

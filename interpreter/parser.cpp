@@ -102,7 +102,7 @@ std::shared_ptr<Expr> Parser::expression()
 
 std::shared_ptr<Expr> Parser::assignment()
 {
-    auto expr = equality();
+    auto expr = or_expr();
 
     if (match({TokenType::EQUAL})) {
         const Token &equals = previous();
@@ -112,6 +112,30 @@ std::shared_ptr<Expr> Parser::assignment()
             return std::make_shared<Assign>(var->name, value);
         }
         error(equals, "Expected expression");
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::or_expr()
+{
+    auto expr = and_expr();
+
+    while (match({TokenType::OR})) {
+        const Token &op = previous();
+        auto right = and_expr();
+        expr = std::make_shared<Logical>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::and_expr()
+{
+    auto expr = equality();
+
+    while (match({TokenType::AND})) {
+        const Token &op = previous();
+        auto right = equality();
+        expr = std::make_shared<Logical>(expr, op, right);
     }
     return expr;
 }

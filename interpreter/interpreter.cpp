@@ -129,6 +129,21 @@ void Interpreter::visit(const Binary &b)
     }
 }
 
+void Interpreter::visit(const Logical &l)
+{
+    result = evaluate(*l.left);
+
+    if (l.op.type == TokenType::OR) {
+        if (is_true(result)) {
+            return;
+        }
+    } else if (!is_true(result)) {
+        return;
+    }
+
+    result = evaluate(*l.right);
+}
+
 void Interpreter::visit(const Variable &v)
 {
     try {

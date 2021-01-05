@@ -42,6 +42,10 @@ private:
 
     std::shared_ptr<Expr> assignment();
 
+    std::shared_ptr<Expr> or_expr();
+
+    std::shared_ptr<Expr> and_expr();
+
     std::shared_ptr<Expr> equality();
 
     std::shared_ptr<Expr> comparison();

@@ -49,6 +49,7 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
         "Binary": ["std::shared_ptr<Expr> left", "Token op", "std::shared_ptr<Expr> right"],
         "Grouping": ["std::shared_ptr<Expr> expr"],
         "Literal": ["std::any value"],
+        "Logical": ["std::shared_ptr<Expr> left", "Token op", "std::shared_ptr<Expr> right"],
         "Unary": ["Token op", "std::shared_ptr<Expr> expr"],
         "Variable": ["Token name"]
     }
