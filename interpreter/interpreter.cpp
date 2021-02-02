@@ -72,12 +72,21 @@ void Interpreter::visit(const Binary &b)
 
     switch (b.op.type) {
     case TokenType::PLUS:
-        check_same_type(left, right, b.op);
+        check_type(right, {float_id, string_id}, b.op);
         check_type(left, {float_id, string_id}, b.op);
         if (left.type() == typeid(float) && right.type() == typeid(float)) {
             result = std::any_cast<float>(left) + std::any_cast<float>(right);
-        } else {
+        } else if (left.type() == typeid(std::string) && right.type() == typeid(std::string)) {
             result = std::any_cast<std::string>(left) + std::any_cast<std::string>(right);
+        } else {
+            // We know one is a string and one is a float
+            if (left.type() == typeid(float)) {
+                result = std::to_string(std::any_cast<float>(left)) +
+                         std::any_cast<std::string>(right);
+            } else {
+                result = std::any_cast<std::string>(left) +
+                         std::to_string(std::any_cast<float>(right));
+            }
         }
         break;
     case TokenType::MINUS:
