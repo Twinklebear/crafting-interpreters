@@ -47,6 +47,9 @@ std::shared_ptr<Stmt> Parser::statement()
     if (match({TokenType::IF})) {
         return if_statement();
     }
+    if (match({TokenType::WHILE})) {
+        return while_statement();
+    }
     if (match({TokenType::PRINT})) {
         return print_statement();
     }
@@ -76,6 +79,17 @@ std::shared_ptr<Stmt> Parser::print_statement()
     auto value = expression();
     consume(TokenType::SEMICOLON, "Expected ; after print statement");
     return std::make_shared<Print>(value);
+}
+
+std::shared_ptr<While> Parser::while_statement()
+{
+    consume(TokenType::LEFT_PAREN, "Expected '(' after 'while'");
+    auto condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after while condition");
+
+    auto body = statement();
+
+    return std::make_shared<While>(condition, body);
 }
 
 std::shared_ptr<Stmt> Parser::expression_statement()

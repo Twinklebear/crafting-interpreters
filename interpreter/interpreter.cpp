@@ -147,7 +147,7 @@ void Interpreter::visit(const Logical &l)
 void Interpreter::visit(const Variable &v)
 {
     try {
-        result = environment.get(v.name.lexeme);
+        result = environment->get(v.name.lexeme);
     } catch (const std::runtime_error &) {
         throw InterpreterError(v.name, "Undefined variable");
     }
@@ -157,7 +157,7 @@ void Interpreter::visit(const Assign &a)
 {
     result = evaluate(*a.value);
     try {
-        environment.assign(a.name.lexeme, result);
+        environment->assign(a.name.lexeme, result);
     } catch (const std::runtime_error &) {
         throw InterpreterError(a.name, "Undefined variable");
     }
@@ -165,7 +165,7 @@ void Interpreter::visit(const Assign &a)
 
 void Interpreter::visit(const Block &b)
 {
-    Environment env(environment);
+    auto env = std::make_shared<Environment>(environment);
     execute_block(b.statements, env);
     result = std::any();
 }
@@ -182,6 +182,14 @@ void Interpreter::visit(const If &f)
         evaluate({f.then_branch});
     } else if (f.else_branch) {
         evaluate({f.else_branch});
+    }
+    result = std::any();
+}
+
+void Interpreter::visit(const While &w)
+{
+    while (is_true(evaluate(*w.condition))) {
+        evaluate({w.body});
     }
     result = std::any();
 }
@@ -212,15 +220,15 @@ void Interpreter::visit(const Var &v)
         initializer = evaluate(*v.initializer);
     }
 
-    environment.define(v.token.lexeme, initializer);
+    environment->define(v.token.lexeme, initializer);
 
     result = std::any();
 }
 
 void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
-                                Environment &env)
+                                std::shared_ptr<Environment> &env)
 {
-    Environment prev = environment;
+    auto prev = environment;
     environment = env;
     evaluate(statements);
     environment = prev;

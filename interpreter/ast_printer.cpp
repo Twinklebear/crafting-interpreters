@@ -107,6 +107,16 @@ void ProgramPrinter::visit(const If &f)
     text += "}";
 }
 
+void ProgramPrinter::visit(const While &w)
+{
+    text += "{WHILE Stmt, cond: ";
+    ASTPrinter ast_printer;
+    text += ast_printer.print(*w.condition) + "\nLOOP: ";
+    // TODO: would be nice for readability to add indentation here
+    ProgramPrinter then_printer;
+    text += then_printer.print({w.body}) + "}";
+}
+
 void ProgramPrinter::visit(const Print &p)
 {
     text += "{PRINT Stmt ";

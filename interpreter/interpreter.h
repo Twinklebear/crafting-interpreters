@@ -15,7 +15,7 @@ struct InterpreterError {
 };
 
 struct Interpreter : Expr::Visitor, Stmt::Visitor {
-    Environment environment;
+    std::shared_ptr<Environment> environment = std::make_shared<Environment>();
     std::any result;
 
     Interpreter();
@@ -34,6 +34,7 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Block &b) override;
     void visit(const Expression &e) override;
     void visit(const If &f) override;
+    void visit(const While &w) override;
     void visit(const Print &p) override;
     void visit(const Var &v) override;
 
@@ -41,7 +42,8 @@ private:
     std::type_index float_id, string_id, bool_id, nil_id;
     std::unordered_map<std::type_index, std::string> type_names;
 
-    void execute_block(const std::vector<std::shared_ptr<Stmt>> &statements, Environment &env);
+    void execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
+                       std::shared_ptr<Environment> &env);
 
     // Check if the type is one of the specified valid types, if not throws an
     // InterpreterError

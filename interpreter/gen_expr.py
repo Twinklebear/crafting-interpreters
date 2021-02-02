@@ -60,7 +60,8 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
         "If": ["std::shared_ptr<Expr> condition", "std::shared_ptr<Stmt> then_branch",
             "std::shared_ptr<Stmt> else_branch"],
         "Print": ["std::shared_ptr<Expr> expr"],
-        "Var": ["Token token", "std::shared_ptr<Expr> initializer"]
+        "Var": ["Token token", "std::shared_ptr<Expr> initializer"],
+        "While": ["std::shared_ptr<Expr> condition", "std::shared_ptr<Stmt> body"]
     }
 
     define_ast(header, cpp, "Expr", expressions)

@@ -14,6 +14,9 @@ public:
 
     Environment() = default;
 
+    Environment(const Environment &e) = delete;
+    Environment& operator=(const Environment &e) = delete;
+
     void define(const std::string &name, const std::any &val);
 
     void assign(const std::string &name, const std::any &val);

@@ -26,6 +26,7 @@ struct ProgramPrinter : Stmt::Visitor {
     void visit(const Block &b) override;
     void visit(const Expression &e) override;
     void visit(const If &f) override;
+    void visit(const While &w) override;
     void visit(const Print &p) override;
     void visit(const Var &v) override;
 };
