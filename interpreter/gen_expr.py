@@ -41,7 +41,7 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as cpp:
-    header.write("#pragma once\n#include <any>\n#include <vector>\n#include \"token.h\"\n")
+    header.write("#pragma once\n#include <any>\n#include <vector>\n#include <memory>\n#include \"token.h\"\n")
     cpp.write("#include \"{}.h\"\n".format(sys.argv[1]))
 
     expressions = {
