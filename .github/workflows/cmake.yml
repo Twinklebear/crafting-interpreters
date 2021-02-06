@@ -38,4 +38,4 @@ jobs:
       env:
         TEST_DIR: ${{github.workspace}}/interpreter/tests/
       shell: bash
-      run: ../tests/run_tests.sh
+      run: ../tests/run_tests.py
