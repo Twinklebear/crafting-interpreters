@@ -65,8 +65,8 @@ std::any LoxFunction::call(Interpreter &interpreter, std::vector<std::any> &args
 
     try {
         interpreter.execute_block({declaration.body}, environment);
-    } catch (const ReturnControlFlow &ret) {
-        return ret.value;
+    } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
+        return ret->value;
     }
     return std::any();
 }

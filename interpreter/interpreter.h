@@ -19,6 +19,8 @@ struct ReturnControlFlow {
 
     ReturnControlFlow(const std::any &value);
 
+    ReturnControlFlow(const ReturnControlFlow &r) = default;
+
     ReturnControlFlow() = default;
 };
 

@@ -281,7 +281,7 @@ void Interpreter::visit(const Return &r)
     if (r.value) {
         return_result = evaluate(*r.value);
     }
-    throw ReturnControlFlow(return_result);
+    throw std::make_shared<ReturnControlFlow>(return_result);
 }
 
 void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
@@ -291,7 +291,7 @@ void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statem
     environment = env;
     try {
         evaluate(statements);
-    } catch (const ReturnControlFlow &ret) {
+    } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
         // Need to restore environments as we return out
         // TODO: Same would apply for break
         // TODO: Needs a better way to handle the environments with the call stack

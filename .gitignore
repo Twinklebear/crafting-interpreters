@@ -32,5 +32,6 @@
 *.app
 *.swp
 */build/
+*/cmake-build/
 compile_commands.json
 interpreter/.cache/
