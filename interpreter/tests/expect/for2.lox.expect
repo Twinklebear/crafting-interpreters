@@ -1,0 +1,45 @@
+[Token]: VAR var var l1
+[Token]: IDENTIFIER j j l1
+[Token]: EQUAL = l1
+[Token]: NUMBER 5 5 l1
+[Token]: SEMICOLON ; l1
+[Token]: FOR for for l2
+[Token]: LEFT_PAREN ( l2
+[Token]: SEMICOLON ; l2
+[Token]: IDENTIFIER j j l2
+[Token]: LESS < l2
+[Token]: NUMBER 10 10 l2
+[Token]: SEMICOLON ; l2
+[Token]: IDENTIFIER j j l2
+[Token]: EQUAL = l2
+[Token]: IDENTIFIER j j l2
+[Token]: PLUS + l2
+[Token]: NUMBER 1 1 l2
+[Token]: RIGHT_PAREN ) l2
+[Token]: PRINT print print l2
+[Token]: STRING "j is " j is  l2
+[Token]: PLUS + l2
+[Token]: IDENTIFIER j j l2
+[Token]: SEMICOLON ; l2
+[Token]: PRINT print print l4
+[Token]: STRING "end, j = " end, j =  l4
+[Token]: PLUS + l4
+[Token]: IDENTIFIER j j l4
+[Token]: SEMICOLON ; l4
+[Token]: END_OF_FILE  l6
+Program:
+{VAR Stmt 'j' = 5.000000}
+{WHILE Stmt, cond: (LESS '<' (variable 'j') 10.000000)
+LOOP: {BLOCK Stmt
+{PRINT Stmt (PLUS '+' j is  (variable 'j'))}
+{EXPRESSION Stmt (assignment 'j' = (PLUS '+' (variable 'j') 1.000000))}
+}
+}
+{PRINT Stmt (PLUS '+' end, j =  (variable 'j'))}
+------
+j is 5.000000
+j is 6.000000
+j is 7.000000
+j is 8.000000
+j is 9.000000
+end, j = 10.000000

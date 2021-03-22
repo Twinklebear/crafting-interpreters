@@ -1,0 +1,8 @@
+var do_loop = true;
+for (var i = 0; do_loop; i = i + 1) {
+    print i;
+    if (i == 5) {
+        do_loop = false;
+    }
+}
+

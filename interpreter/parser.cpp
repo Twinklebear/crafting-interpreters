@@ -50,6 +50,9 @@ std::shared_ptr<Stmt> Parser::statement()
     if (match({TokenType::WHILE})) {
         return while_statement();
     }
+    if (match({TokenType::FOR})) {
+        return for_statement();
+    }
     if (match({TokenType::PRINT})) {
         return print_statement();
     }
@@ -81,7 +84,7 @@ std::shared_ptr<Stmt> Parser::print_statement()
     return std::make_shared<Print>(value);
 }
 
-std::shared_ptr<While> Parser::while_statement()
+std::shared_ptr<Stmt> Parser::while_statement()
 {
     consume(TokenType::LEFT_PAREN, "Expected '(' after 'while'");
     auto condition = expression();
@@ -90,6 +93,50 @@ std::shared_ptr<While> Parser::while_statement()
     auto body = statement();
 
     return std::make_shared<While>(condition, body);
+}
+
+std::shared_ptr<Stmt> Parser::for_statement()
+{
+    consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'");
+    std::shared_ptr<Stmt> initializer;
+    if (!match({TokenType::SEMICOLON})) {
+        if (match({TokenType::VAR})) {
+            initializer = var_declaration();
+        } else {
+            initializer = expression_statement();
+        }
+    }
+
+    std::shared_ptr<Expr> condition;
+    if (!check(TokenType::SEMICOLON)) {
+        condition = expression();
+    }
+    consume(TokenType::SEMICOLON, "Expect ';' after for loop condition");
+
+    std::shared_ptr<Expr> increment;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        increment = expression();
+    }
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses");
+
+    auto body = statement();
+
+    // Desugar the for statement into a while loop for execution
+    if (increment) {
+        body = std::make_shared<Block>(
+            std::vector<std::shared_ptr<Stmt>>{body, std::make_shared<Expression>(increment)});
+    }
+
+    if (!condition) {
+        condition = std::make_shared<Literal>(true);
+    }
+    body = std::make_shared<While>(condition, body);
+
+    if (initializer) {
+        body = std::make_shared<Block>(std::vector<std::shared_ptr<Stmt>>{initializer, body});
+    }
+
+    return body;
 }
 
 std::shared_ptr<Stmt> Parser::expression_statement()

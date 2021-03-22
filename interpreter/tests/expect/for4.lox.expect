@@ -1,0 +1,63 @@
+[Token]: VAR var var l1
+[Token]: IDENTIFIER do_loop do_loop l1
+[Token]: EQUAL = l1
+[Token]: TRUE true true l1
+[Token]: SEMICOLON ; l1
+[Token]: FOR for for l2
+[Token]: LEFT_PAREN ( l2
+[Token]: VAR var var l2
+[Token]: IDENTIFIER i i l2
+[Token]: EQUAL = l2
+[Token]: NUMBER 0 0 l2
+[Token]: SEMICOLON ; l2
+[Token]: IDENTIFIER do_loop do_loop l2
+[Token]: SEMICOLON ; l2
+[Token]: IDENTIFIER i i l2
+[Token]: EQUAL = l2
+[Token]: IDENTIFIER i i l2
+[Token]: PLUS + l2
+[Token]: NUMBER 1 1 l2
+[Token]: RIGHT_PAREN ) l2
+[Token]: LEFT_BRACE { l2
+[Token]: PRINT print print l3
+[Token]: IDENTIFIER i i l3
+[Token]: SEMICOLON ; l3
+[Token]: IF if if l4
+[Token]: LEFT_PAREN ( l4
+[Token]: IDENTIFIER i i l4
+[Token]: EQUAL_EQUAL == l4
+[Token]: NUMBER 5 5 l4
+[Token]: RIGHT_PAREN ) l4
+[Token]: LEFT_BRACE { l4
+[Token]: IDENTIFIER do_loop do_loop l5
+[Token]: EQUAL = l5
+[Token]: FALSE false false l5
+[Token]: SEMICOLON ; l5
+[Token]: RIGHT_BRACE } l6
+[Token]: RIGHT_BRACE } l7
+[Token]: END_OF_FILE  l9
+Program:
+{VAR Stmt 'do_loop' = true}
+{BLOCK Stmt
+{VAR Stmt 'i' = 0.000000}
+{WHILE Stmt, cond: (variable 'do_loop')
+LOOP: {BLOCK Stmt
+{BLOCK Stmt
+{PRINT Stmt (variable 'i')}
+{IF Stmt, cond: (EQUAL_EQUAL '==' (variable 'i') 5.000000)
+THEN: {BLOCK Stmt
+{EXPRESSION Stmt (assignment 'do_loop' = false)}
+}
+}
+}
+{EXPRESSION Stmt (assignment 'i' = (PLUS '+' (variable 'i') 1.000000))}
+}
+}
+}
+------
+0
+1
+2
+3
+4
+5

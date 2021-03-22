@@ -34,7 +34,9 @@ private:
 
     std::shared_ptr<Stmt> print_statement();
 
-    std::shared_ptr<While> while_statement();
+    std::shared_ptr<Stmt> while_statement();
+
+    std::shared_ptr<Stmt> for_statement();
 
     std::shared_ptr<Stmt> expression_statement();
 
