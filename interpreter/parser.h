@@ -42,6 +42,8 @@ private:
 
     std::shared_ptr<Stmt> block_statement();
 
+    std::shared_ptr<Stmt> function(const std::string &kind);
+
     std::shared_ptr<Expr> expression();
 
     std::shared_ptr<Expr> assignment();

@@ -242,6 +242,8 @@ void Interpreter::visit(const Print &p)
             std::cout << std::any_cast<std::string>(val) << "\n";
         } else if (val.type() == typeid(bool)) {
             std::cout << (std::any_cast<bool>(val) ? "true" : "false") << "\n";
+        } else if (val.type() == typeid(std::shared_ptr<LoxCallable>)) {
+            std::cout << std::any_cast<std::shared_ptr<LoxCallable>>(val)->to_string() << "\n";
         } else {
             std::cout << "[error]: Unsupported val type!?\n";
         }
@@ -261,6 +263,13 @@ void Interpreter::visit(const Var &v)
     environment->define(v.token.lexeme, initializer);
 
     result = std::any();
+}
+
+void Interpreter::visit(const Function &f)
+{
+    // Now we will create and add a callable to the globals
+    globals->define(f.name.lexeme,
+                    std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(f)));
 }
 
 void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,

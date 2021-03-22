@@ -1,0 +1,37 @@
+[Token]: FUN fun fun l1
+[Token]: IDENTIFIER add add l1
+[Token]: LEFT_PAREN ( l1
+[Token]: IDENTIFIER a a l1
+[Token]: COMMA , l1
+[Token]: IDENTIFIER b b l1
+[Token]: RIGHT_PAREN ) l1
+[Token]: LEFT_BRACE { l1
+[Token]: PRINT print print l2
+[Token]: IDENTIFIER a a l2
+[Token]: PLUS + l2
+[Token]: IDENTIFIER b b l2
+[Token]: SEMICOLON ; l2
+[Token]: RIGHT_BRACE } l3
+[Token]: PRINT print print l5
+[Token]: IDENTIFIER add add l5
+[Token]: SEMICOLON ; l5
+[Token]: IDENTIFIER add add l6
+[Token]: LEFT_PAREN ( l6
+[Token]: NUMBER 1 1 l6
+[Token]: COMMA , l6
+[Token]: NUMBER 2 2 l6
+[Token]: RIGHT_PAREN ) l6
+[Token]: SEMICOLON ; l6
+[Token]: END_OF_FILE  l8
+Program:
+{FUNCTION Stmt 'add' (a, b)
+ BODY:
+{BLOCK Stmt
+{PRINT Stmt (PLUS '+' (variable 'a') (variable 'b'))}
+}
+}
+{PRINT Stmt (variable 'add')}
+{EXPRESSION Stmt (CALL (variable 'add'))}
+------
+<fn add>
+3

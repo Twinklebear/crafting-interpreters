@@ -140,3 +140,18 @@ void ProgramPrinter::visit(const Var &v)
     }
     text += "}";
 }
+
+void ProgramPrinter::visit(const Function &v)
+{
+    text += "{FUNCTION Stmt '" + v.name.lexeme + "' (";
+    for (size_t i = 0; i < v.params.size(); ++i) {
+        text += v.params[i].lexeme;
+        if (i + 1 < v.params.size()) {
+            text += ", ";
+        }
+    }
+    text += ")\n BODY:\n";
+    ProgramPrinter printer;
+    printer.print({v.body});
+    text += printer.text + "}";
+}

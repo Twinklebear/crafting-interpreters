@@ -30,4 +30,5 @@ struct ProgramPrinter : Stmt::Visitor {
     void visit(const While &w) override;
     void visit(const Print &p) override;
     void visit(const Var &v) override;
+    void visit(const Function &v) override;
 };
