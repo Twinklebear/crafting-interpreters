@@ -15,7 +15,8 @@ struct InterpreterError {
 };
 
 struct Interpreter : Expr::Visitor, Stmt::Visitor {
-    std::shared_ptr<Environment> environment = std::make_shared<Environment>();
+    std::shared_ptr<Environment> globals = std::make_shared<Environment>();
+    std::shared_ptr<Environment> environment = globals;
     std::any result;
 
     Interpreter();
@@ -27,6 +28,7 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Literal &l) override;
     void visit(const Unary &u) override;
     void visit(const Binary &b) override;
+    void visit(const Call &c) override;
     void visit(const Logical &l) override;
     void visit(const Variable &v) override;
     void visit(const Assign &a) override;
@@ -39,7 +41,7 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Var &v) override;
 
 private:
-    std::type_index float_id, string_id, bool_id, nil_id;
+    std::type_index float_id, string_id, bool_id, nil_id, callable_id;
     std::unordered_map<std::type_index, std::string> type_names;
 
     void execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,

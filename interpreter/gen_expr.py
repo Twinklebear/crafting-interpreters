@@ -48,6 +48,7 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
     expressions = {
         "Assign": ["Token name", "std::shared_ptr<Expr> value"],
         "Binary": ["std::shared_ptr<Expr> left", "Token op", "std::shared_ptr<Expr> right"],
+        "Call": ["std::shared_ptr<Expr> callee", "Token paren", "std::vector<std::shared_ptr<Expr>> args"],
         "Grouping": ["std::shared_ptr<Expr> expr"],
         "Literal": ["std::any value"],
         "Logical": ["std::shared_ptr<Expr> left", "Token op", "std::shared_ptr<Expr> right"],

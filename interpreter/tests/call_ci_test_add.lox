@@ -1,0 +1,11 @@
+var a = 1.0;
+var b = 2.0;
+var c = _ci_test_add(a, b);
+print "1 + 2 = " + c;
+
+c = _ci_test_add(1 + 1, 2 + 2);
+print "2 + 4 = " + c;
+
+var s = _ci_test_add("hi", " bye");
+print s;
+

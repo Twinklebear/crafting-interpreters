@@ -46,6 +46,13 @@ void ASTPrinter::visit(const Binary &b)
     text += ")";
 }
 
+void ASTPrinter::visit(const Call &c)
+{
+    text += "(CALL ";
+    c.callee->accept(*this);
+    text += ")";
+}
+
 void ASTPrinter::visit(const Logical &l)
 {
     text += "(" + to_string(l.op.type) + " '" + l.op.lexeme + "' ";

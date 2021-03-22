@@ -21,6 +21,7 @@ add_executable(interpreter
     parser.cpp
     interpreter.cpp
     environment.cpp
+    lox_callable.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/expr.cpp)
 
 target_include_directories(interpreter PUBLIC

@@ -1,5 +1,6 @@
 #include "interpreter.h"
 #include <iostream>
+#include "lox_callable.h"
 #include "util.h"
 
 InterpreterError::InterpreterError(const Token &t, const std::string &msg)
@@ -31,12 +32,19 @@ Interpreter::Interpreter()
     : float_id(std::type_index(typeid(float))),
       string_id(std::type_index(typeid(std::string))),
       bool_id(std::type_index(typeid(bool))),
-      nil_id(std::type_index(typeid(void)))
+      nil_id(std::type_index(typeid(void))),
+      callable_id(std::type_index(typeid(std::shared_ptr<LoxCallable>)))
 {
     type_names[float_id] = pretty_type_name(typeid(float));
     type_names[string_id] = pretty_type_name(typeid(std::string));
     type_names[bool_id] = pretty_type_name(typeid(bool));
     type_names[nil_id] = pretty_type_name(typeid(void));
+    type_names[callable_id] = pretty_type_name(typeid(std::shared_ptr<LoxCallable>));
+
+    // Populate the global environment with native functions
+    globals->define("clock", std::shared_ptr<LoxCallable>(std::make_shared<Clock>()));
+    globals->define("_ci_test_add",
+                    std::shared_ptr<LoxCallable>(std::make_shared<CITestAdd>()));
 }
 
 void Interpreter::visit(const Grouping &g)
@@ -135,6 +143,27 @@ void Interpreter::visit(const Binary &b)
         break;
     default:
         break;
+    }
+}
+
+void Interpreter::visit(const Call &c)
+{
+    auto callee = evaluate(*c.callee);
+    std::vector<std::any> args;
+    for (const auto &e : c.args) {
+        args.push_back(evaluate(*e));
+    }
+
+    try {
+        auto fcn = std::any_cast<std::shared_ptr<LoxCallable>>(callee);
+        if (args.size() != fcn->arity()) {
+            throw InterpreterError(c.paren,
+                                   "Expected " + std::to_string(fcn->arity()) +
+                                       " arguments but got " + std::to_string(args.size()));
+        }
+        result = fcn->call(*this, args);
+    } catch (const std::bad_any_cast &e) {
+        throw InterpreterError(c.paren, "Only functions and classes are callable");
     }
 }
 
