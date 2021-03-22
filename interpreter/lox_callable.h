@@ -35,7 +35,7 @@ struct CITestAdd : LoxCallable {
 
 // A function defined in Lox
 struct LoxFunction : LoxCallable {
-    Function declaration;
+    const Function declaration;
 
     LoxFunction(const Function &declaration);
 

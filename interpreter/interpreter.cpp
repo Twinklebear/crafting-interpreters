@@ -8,6 +8,8 @@ InterpreterError::InterpreterError(const Token &t, const std::string &msg)
 {
 }
 
+ReturnControlFlow::ReturnControlFlow(const std::any &value) : value(value) {}
+
 void Interpreter::evaluate(const std::vector<std::shared_ptr<Stmt>> &statements)
 {
     result = std::any();
@@ -270,6 +272,16 @@ void Interpreter::visit(const Function &f)
     // Now we will create and add a callable to the globals
     globals->define(f.name.lexeme,
                     std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(f)));
+    result = std::any();
+}
+
+void Interpreter::visit(const Return &r)
+{
+    std::any return_result;
+    if (r.value) {
+        return_result = evaluate(*r.value);
+    }
+    throw ReturnControlFlow(return_result);
 }
 
 void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
@@ -277,7 +289,15 @@ void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statem
 {
     auto prev = environment;
     environment = env;
-    evaluate(statements);
+    try {
+        evaluate(statements);
+    } catch (const ReturnControlFlow &ret) {
+        // Need to restore environments as we return out
+        // TODO: Same would apply for break
+        // TODO: Needs a better way to handle the environments with the call stack
+        environment = prev;
+        throw ret;
+    }
     environment = prev;
 }
 

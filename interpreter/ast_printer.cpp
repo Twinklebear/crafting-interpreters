@@ -104,7 +104,6 @@ void ProgramPrinter::visit(const If &f)
     text += "{IF Stmt, cond: ";
     ASTPrinter ast_printer;
     text += ast_printer.print(*f.condition) + "\nTHEN: ";
-    // TODO: would be nice for readability to add indentation here
     ProgramPrinter then_printer;
     text += then_printer.print({f.then_branch});
     if (f.else_branch) {
@@ -154,4 +153,14 @@ void ProgramPrinter::visit(const Function &v)
     ProgramPrinter printer;
     printer.print({v.body});
     text += printer.text + "}";
+}
+
+void ProgramPrinter::visit(const Return &r)
+{
+    text += "{RETURN Stmt '";
+    ASTPrinter ast_printer;
+    if (r.value) {
+        text += ast_printer.print(*r.value);
+    }
+    text += "}";
 }

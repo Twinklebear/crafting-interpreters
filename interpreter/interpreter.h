@@ -14,6 +14,12 @@ struct InterpreterError {
     InterpreterError(const Token &t, const std::string &msg);
 };
 
+struct ReturnControlFlow {
+    std::any value;
+
+    ReturnControlFlow(const std::any &value);
+};
+
 struct Interpreter : Expr::Visitor, Stmt::Visitor {
     std::shared_ptr<Environment> globals = std::make_shared<Environment>();
     std::shared_ptr<Environment> environment = std::make_shared<Environment>(globals);
@@ -44,6 +50,7 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Print &p) override;
     void visit(const Var &v) override;
     void visit(const Function &f) override;
+    void visit(const Return &r) override;
 
 private:
     std::type_index float_id, string_id, bool_id, nil_id, callable_id;

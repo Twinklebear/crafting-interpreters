@@ -64,7 +64,8 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
         "Print": ["std::shared_ptr<Expr> expr"],
         "Var": ["Token token", "std::shared_ptr<Expr> initializer"],
         "While": ["std::shared_ptr<Expr> condition", "std::shared_ptr<Stmt> body"],
-        "Function": ["Token name", "std::vector<Token> params", "std::shared_ptr<Stmt> body"]
+        "Function": ["Token name", "std::vector<Token> params", "std::shared_ptr<Stmt> body"],
+        "Return": ["Token keyword", "std::shared_ptr<Expr> value"]
     }
 
     define_ast(header, cpp, "Expr", expressions)

@@ -1,5 +1,6 @@
 #include "lox_callable.h"
 #include <chrono>
+#include <iostream>
 
 size_t Clock::arity() const
 {
@@ -62,7 +63,11 @@ std::any LoxFunction::call(Interpreter &interpreter, std::vector<std::any> &args
         environment->define(declaration.params[i].lexeme, args[i]);
     }
 
-    interpreter.execute_block({declaration.body}, environment);
+    try {
+        interpreter.execute_block({declaration.body}, environment);
+    } catch (const ReturnControlFlow &ret) {
+        return ret.value;
+    }
     return std::any();
 }
 
