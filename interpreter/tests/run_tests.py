@@ -12,7 +12,7 @@ ANSI_END = "\033[0m"
 test_dir = os.getenv("TEST_DIR")
 failed_tests = 0
 ran_tests = 0
-for test_input in glob.glob("{}/*.js".format(test_dir)):
+for test_input in glob.glob("{}/*.lox".format(test_dir)):
     script_name = os.path.basename(test_input)
     expect_out_file = "{}/expect/{}.expect".format(test_dir, script_name)
     print("Running test '{}':".format(script_name), end=" ")
