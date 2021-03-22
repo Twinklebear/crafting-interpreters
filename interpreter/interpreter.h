@@ -18,6 +18,8 @@ struct ReturnControlFlow {
     std::any value;
 
     ReturnControlFlow(const std::any &value);
+
+    ReturnControlFlow() = default;
 };
 
 struct Interpreter : Expr::Visitor, Stmt::Visitor {
