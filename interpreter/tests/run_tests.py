@@ -11,11 +11,13 @@ ANSI_END = "\033[0m"
 
 test_dir = os.getenv("TEST_DIR")
 failed_tests = 0
+ran_tests = 0
 for test_input in glob.glob("{}/*.js".format(test_dir)):
     script_name = os.path.basename(test_input)
     expect_out_file = "{}/expect/{}.expect".format(test_dir, script_name)
     print("Running test '{}':".format(script_name), end=" ")
     with open(expect_out_file, "r") as expect_file:
+        ran_tests += 1
         expect_output = expect_file.read()
         result = subprocess.run(["./interpreter", test_input], stdout=subprocess.PIPE)
         output = result.stdout.decode("utf-8")
@@ -24,6 +26,8 @@ for test_input in glob.glob("{}/*.js".format(test_dir)):
             print(ANSI_RED + "Failed" + ANSI_END)
         else:
             print(ANSI_GREEN + "Passed" + ANSI_END)
+
+print("Ran {} tests".format(ran_tests))
 
 if failed_tests != 0:
     print("Some tests did not pass")
