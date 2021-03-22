@@ -1,0 +1,96 @@
+[Token]: FUN fun fun l1
+[Token]: IDENTIFIER fib fib l1
+[Token]: LEFT_PAREN ( l1
+[Token]: IDENTIFIER n n l1
+[Token]: RIGHT_PAREN ) l1
+[Token]: LEFT_BRACE { l1
+[Token]: IF if if l2
+[Token]: LEFT_PAREN ( l2
+[Token]: IDENTIFIER n n l2
+[Token]: LESS_EQUAL <= l2
+[Token]: NUMBER 1 1 l2
+[Token]: RIGHT_PAREN ) l2
+[Token]: LEFT_BRACE { l2
+[Token]: RETURN return return l3
+[Token]: IDENTIFIER n n l3
+[Token]: SEMICOLON ; l3
+[Token]: RIGHT_BRACE } l4
+[Token]: RETURN return return l5
+[Token]: IDENTIFIER fib fib l5
+[Token]: LEFT_PAREN ( l5
+[Token]: IDENTIFIER n n l5
+[Token]: MINUS - l5
+[Token]: NUMBER 2 2 l5
+[Token]: RIGHT_PAREN ) l5
+[Token]: PLUS + l5
+[Token]: IDENTIFIER fib fib l5
+[Token]: LEFT_PAREN ( l5
+[Token]: IDENTIFIER n n l5
+[Token]: MINUS - l5
+[Token]: NUMBER 1 1 l5
+[Token]: RIGHT_PAREN ) l5
+[Token]: SEMICOLON ; l5
+[Token]: RIGHT_BRACE } l6
+[Token]: FOR for for l8
+[Token]: LEFT_PAREN ( l8
+[Token]: VAR var var l8
+[Token]: IDENTIFIER i i l8
+[Token]: EQUAL = l8
+[Token]: NUMBER 0 0 l8
+[Token]: SEMICOLON ; l8
+[Token]: IDENTIFIER i i l8
+[Token]: LESS_EQUAL <= l8
+[Token]: NUMBER 12 12 l8
+[Token]: SEMICOLON ; l8
+[Token]: IDENTIFIER i i l8
+[Token]: EQUAL = l8
+[Token]: IDENTIFIER i i l8
+[Token]: PLUS + l8
+[Token]: NUMBER 1 1 l8
+[Token]: RIGHT_PAREN ) l8
+[Token]: LEFT_BRACE { l8
+[Token]: PRINT print print l9
+[Token]: IDENTIFIER fib fib l9
+[Token]: LEFT_PAREN ( l9
+[Token]: IDENTIFIER i i l9
+[Token]: RIGHT_PAREN ) l9
+[Token]: SEMICOLON ; l9
+[Token]: RIGHT_BRACE } l10
+[Token]: END_OF_FILE  l11
+Program:
+{FUNCTION Stmt 'fib' (n)
+ BODY:
+{BLOCK Stmt
+{IF Stmt, cond: (LESS_EQUAL '<=' (variable 'n') 1.000000)
+THEN: {BLOCK Stmt
+{RETURN Stmt '(variable 'n')}
+}
+}
+{RETURN Stmt '(PLUS '+' (CALL (variable 'fib')) (CALL (variable 'fib')))}
+}
+}
+{BLOCK Stmt
+{VAR Stmt 'i' = 0.000000}
+{WHILE Stmt, cond: (LESS_EQUAL '<=' (variable 'i') 12.000000)
+LOOP: {BLOCK Stmt
+{BLOCK Stmt
+{PRINT Stmt (CALL (variable 'fib'))}
+}
+{EXPRESSION Stmt (assignment 'i' = (PLUS '+' (variable 'i') 1.000000))}
+}
+}
+}
+------
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+144
