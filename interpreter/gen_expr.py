@@ -2,6 +2,7 @@
 import sys
 import os
 import subprocess
+import shutil
 
 def define_ast(header, cpp, base_name, types):
     for expr, args in types.items():
@@ -71,6 +72,7 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
     define_ast(header, cpp, "Expr", expressions)
     define_ast(header, cpp, "Stmt", statements)
 
-if os.getenv("CLANG_FORMAT"):
-    subprocess.run([os.getenv("CLANG_FORMAT"), "-i", sys.argv[1] + ".h", sys.argv[1] + ".cpp"])
+clang_format = shutil.which("clang-format") or os.getenv("CLANG_FORMAT")
+if clang_format:
+    subprocess.run([clang_format, "-i", sys.argv[1] + ".h", sys.argv[1] + ".cpp"])
 
