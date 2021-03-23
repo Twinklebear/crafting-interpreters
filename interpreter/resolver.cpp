@@ -99,12 +99,17 @@ void Resolver::visit(const Function &f)
 {
     declare(f.name);
     define(f.name);
-    resolve_function(f);
+    resolve_function(f, FunctionType::FUNCTION);
 }
 
 void Resolver::visit(const Return &r)
 {
-    resolve(r.value);
+    if (current_function == FunctionType::NONE) {
+        error(r.keyword, "Can't return in top-level code");
+    }
+    if (r.value) {
+        resolve(r.value);
+    }
 }
 
 void Resolver::begin_scope()
@@ -140,6 +145,10 @@ void Resolver::declare(const Token &name)
         return;
     }
     auto &scope = scopes.back();
+    auto fnd = scope.find(name.lexeme);
+    if (fnd != scope.end()) {
+        error(name, "A variable with this name already exists in current scope");
+    }
     scope[name.lexeme] = false;
 }
 
@@ -165,8 +174,11 @@ void Resolver::resolve_local(const Expr &expr, const Token &name)
     }
 }
 
-void Resolver::resolve_function(const Function &f)
+void Resolver::resolve_function(const Function &f, const FunctionType type)
 {
+    auto enclosing_function = current_function;
+    current_function = type;
+
     begin_scope();
     for (const auto &param : f.params) {
         declare(param);
@@ -174,4 +186,6 @@ void Resolver::resolve_function(const Function &f)
     }
     resolve(f.body);
     end_scope();
+
+    current_function = enclosing_function;
 }

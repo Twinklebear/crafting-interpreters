@@ -7,10 +7,13 @@
 #include "expr.h"
 #include "interpreter.h"
 
+enum class FunctionType { NONE, FUNCTION };
+
 struct Resolver : Expr::Visitor, Stmt::Visitor {
     // Treated as a stack, but we need to access scopes by index as well
     // when resolving variables
     std::vector<std::unordered_map<std::string, bool>> scopes;
+    FunctionType current_function = FunctionType::NONE;
 
     Interpreter &interpreter;
 
@@ -51,5 +54,5 @@ private:
 
     void resolve_local(const Expr &expr, const Token &name);
 
-    void resolve_function(const Function &f);
+    void resolve_function(const Function &f, const FunctionType type);
 };
