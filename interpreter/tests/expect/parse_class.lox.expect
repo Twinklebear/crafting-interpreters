@@ -1,0 +1,28 @@
+[Token]: CLASS class class l1
+[Token]: IDENTIFIER Test Test l1
+[Token]: LEFT_BRACE { l1
+[Token]: IDENTIFIER hi hi l2
+[Token]: LEFT_PAREN ( l2
+[Token]: RIGHT_PAREN ) l2
+[Token]: LEFT_BRACE { l2
+[Token]: PRINT print print l3
+[Token]: STRING "hi" hi l3
+[Token]: SEMICOLON ; l3
+[Token]: RIGHT_BRACE } l4
+[Token]: RIGHT_BRACE } l5
+[Token]: PRINT print print l7
+[Token]: IDENTIFIER Test Test l7
+[Token]: SEMICOLON ; l7
+[Token]: END_OF_FILE  l9
+Program:
+{CLASS Stmt 'Test'
+{FUNCTION Stmt 'hi' ()
+ BODY:
+{BLOCK Stmt
+{PRINT Stmt hi}
+}
+}
+}
+{PRINT Stmt (variable 'Test')}
+------
+Test

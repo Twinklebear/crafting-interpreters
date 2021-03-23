@@ -1,0 +1,8 @@
+class Test {
+    hi() {
+        print "hi";
+    }
+}
+
+print Test;
+
