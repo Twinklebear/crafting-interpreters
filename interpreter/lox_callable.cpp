@@ -46,7 +46,11 @@ std::string CITestAdd::to_string() const
     return "<fn _ci_test_add>";
 }
 
-LoxFunction::LoxFunction(const Function &declaration) : declaration(declaration) {}
+LoxFunction::LoxFunction(const Function &declaration,
+                         const std::shared_ptr<Environment> &closure)
+    : declaration(declaration), closure(closure)
+{
+}
 
 size_t LoxFunction::arity() const
 {
@@ -57,8 +61,7 @@ std::any LoxFunction::call(Interpreter &interpreter, std::vector<std::any> &args
 {
     // Create a new environment for the function and set up its local variables
     // with the argument values
-    std::shared_ptr<Environment> environment =
-        std::make_shared<Environment>(interpreter.globals);
+    auto environment = std::make_shared<Environment>(closure);
     for (size_t i = 0; i < declaration.params.size(); ++i) {
         environment->define(declaration.params[i].lexeme, args[i]);
     }

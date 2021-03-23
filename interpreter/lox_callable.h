@@ -36,8 +36,9 @@ struct CITestAdd : LoxCallable {
 // A function defined in Lox
 struct LoxFunction : LoxCallable {
     const Function declaration;
+    std::shared_ptr<Environment> closure;
 
-    LoxFunction(const Function &declaration);
+    LoxFunction(const Function &declaration, const std::shared_ptr<Environment> &closure);
 
     size_t arity() const override;
 

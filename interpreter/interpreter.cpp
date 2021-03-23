@@ -270,8 +270,9 @@ void Interpreter::visit(const Var &v)
 void Interpreter::visit(const Function &f)
 {
     // Now we will create and add a callable to the globals
-    globals->define(f.name.lexeme,
-                    std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(f)));
+    globals->define(
+        f.name.lexeme,
+        std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(f, environment)));
     result = std::any();
 }
 
