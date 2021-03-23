@@ -1,6 +1,7 @@
 #include "interpreter.h"
 #include <iostream>
 #include "lox_callable.h"
+#include "lox_class.h"
 #include "util.h"
 
 InterpreterError::InterpreterError(const Token &t, const std::string &msg)
@@ -41,7 +42,6 @@ Interpreter::Interpreter()
     type_names[string_id] = pretty_type_name(typeid(std::string));
     type_names[bool_id] = pretty_type_name(typeid(bool));
     type_names[nil_id] = pretty_type_name(typeid(void));
-    type_names[callable_id] = pretty_type_name(typeid(std::shared_ptr<LoxCallable>));
 
     // Populate the global environment with native functions
     globals->define("clock", std::shared_ptr<LoxCallable>(std::make_shared<Clock>()));
@@ -251,6 +251,8 @@ void Interpreter::visit(const Print &p)
             std::cout << (std::any_cast<bool>(val) ? "true" : "false") << "\n";
         } else if (val.type() == typeid(std::shared_ptr<LoxCallable>)) {
             std::cout << std::any_cast<std::shared_ptr<LoxCallable>>(val)->to_string() << "\n";
+        } else if (val.type() == typeid(std::shared_ptr<LoxClass>)) {
+            std::cout << std::any_cast<std::shared_ptr<LoxClass>>(val)->to_string() << "\n";
         } else {
             std::cout << "[error]: Unsupported val type!?\n";
         }
@@ -288,6 +290,13 @@ void Interpreter::visit(const Return &r)
         return_result = evaluate(*r.value);
     }
     throw std::make_shared<ReturnControlFlow>(return_result);
+}
+
+void Interpreter::visit(const Class &c)
+{
+    environment->define(c.name.lexeme, std::any());
+    auto lox_class = std::make_shared<LoxClass>(c.name.lexeme);
+    environment->assign(c.name.lexeme, lox_class);
 }
 
 void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,

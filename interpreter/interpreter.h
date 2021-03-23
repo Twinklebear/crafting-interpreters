@@ -64,6 +64,7 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
     void visit(const Var &v) override;
     void visit(const Function &f) override;
     void visit(const Return &r) override;
+    void visit(const Class &c) override;
 
 private:
     std::type_index float_id, string_id, bool_id, nil_id, callable_id;

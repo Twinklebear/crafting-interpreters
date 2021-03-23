@@ -32,4 +32,5 @@ struct ProgramPrinter : Stmt::Visitor {
     void visit(const Var &v) override;
     void visit(const Function &v) override;
     void visit(const Return &r) override;
+    void visit(const Class &c) override;
 };

@@ -113,6 +113,14 @@ void Resolver::visit(const Return &r)
     }
 }
 
+void Resolver::visit(const Class &c)
+{
+    declare(c.name);
+    define(c.name);
+
+    // TODO: resolving methods
+}
+
 void Resolver::begin_scope()
 {
     scopes.push_back(std::unordered_map<std::string, VariableStatus>());

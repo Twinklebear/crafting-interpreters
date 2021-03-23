@@ -164,3 +164,13 @@ void ProgramPrinter::visit(const Return &r)
     }
     text += "}";
 }
+
+void ProgramPrinter::visit(const Class &c)
+{
+    text += "{CLASS Stmt '" + c.name.lexeme + "'\n";
+
+    for (const auto &m : c.methods) {
+        visit(*m);
+    }
+    text += "\n}";
+}

@@ -45,6 +45,7 @@ struct Resolver : Expr::Visitor, Stmt::Visitor {
     void visit(const Var &v) override;
     void visit(const Function &f) override;
     void visit(const Return &r) override;
+    void visit(const Class &c) override;
 
 private:
     void begin_scope();

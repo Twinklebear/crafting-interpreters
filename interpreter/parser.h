@@ -46,6 +46,8 @@ private:
 
     std::shared_ptr<Stmt> return_statement();
 
+    std::shared_ptr<Stmt> class_statement();
+
     std::shared_ptr<Expr> expression();
 
     std::shared_ptr<Expr> assignment();
