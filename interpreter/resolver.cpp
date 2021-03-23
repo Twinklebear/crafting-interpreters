@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include <iostream>
 #include "util.h"
 
 Resolver::Resolver(Interpreter &interpreter) : interpreter(interpreter) {}
@@ -41,7 +42,7 @@ void Resolver::visit(const Variable &v)
     if (!scopes.empty()) {
         auto &scope = scopes.back();
         auto fnd = scope.find(v.name.lexeme);
-        if (fnd != scope.end() && fnd->second == false) {
+        if (fnd != scope.end() && !fnd->second.defined) {
             error(v.name, "Can't read local variable in its own initializer");
         }
     }
@@ -114,11 +115,17 @@ void Resolver::visit(const Return &r)
 
 void Resolver::begin_scope()
 {
-    scopes.push_back(std::unordered_map<std::string, bool>());
+    scopes.push_back(std::unordered_map<std::string, VariableStatus>());
 }
 
 void Resolver::end_scope()
 {
+    // For unused local var: when we pop the scope, check if it was read from
+    for (const auto &v : scopes.back()) {
+        if (!v.second.read) {
+            std::cout << "Warning: local variable " << v.first << " is never read\n";
+        }
+    }
     scopes.pop_back();
 }
 
@@ -149,7 +156,7 @@ void Resolver::declare(const Token &name)
     if (fnd != scope.end()) {
         error(name, "A variable with this name already exists in current scope");
     }
-    scope[name.lexeme] = false;
+    scope[name.lexeme] = VariableStatus();
 }
 
 void Resolver::define(const Token &name)
@@ -158,7 +165,7 @@ void Resolver::define(const Token &name)
         return;
     }
     auto &scope = scopes.back();
-    scope[name.lexeme] = true;
+    scope[name.lexeme].defined = true;
 }
 
 void Resolver::resolve_local(const Expr &expr, const Token &name)
@@ -168,6 +175,7 @@ void Resolver::resolve_local(const Expr &expr, const Token &name)
         auto &scope = scopes[i];
         auto fnd = scope.find(name.lexeme);
         if (fnd != scope.end()) {
+            fnd->second.read = true;
             interpreter.resolve(expr, scopes.size() - 1 - i);
             return;
         }

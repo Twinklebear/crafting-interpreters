@@ -9,10 +9,15 @@
 
 enum class FunctionType { NONE, FUNCTION };
 
+struct VariableStatus {
+    bool defined = false;
+    bool read = false;
+};
+
 struct Resolver : Expr::Visitor, Stmt::Visitor {
     // Treated as a stack, but we need to access scopes by index as well
     // when resolving variables
-    std::vector<std::unordered_map<std::string, bool>> scopes;
+    std::vector<std::unordered_map<std::string, VariableStatus>> scopes;
     FunctionType current_function = FunctionType::NONE;
 
     Interpreter &interpreter;
