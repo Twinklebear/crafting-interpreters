@@ -26,7 +26,14 @@ struct ReturnControlFlow {
 
 struct Interpreter : Expr::Visitor, Stmt::Visitor {
     std::shared_ptr<Environment> globals = std::make_shared<Environment>();
-    std::shared_ptr<Environment> environment = std::make_shared<Environment>(globals);
+    std::shared_ptr<Environment> environment = globals;
+    // Track the depth each variable expresion is resolved to
+    // So couldn't this just be "Variable*"?
+    // NOTE: The pointers all refer to objects held in std::shared_ptr, though
+    // with how the visitor pattern works here the shared ptr is not directly
+    // accessible since visit is called by the object itself.
+    // Maybe clox introduces a better design here, or just uses raw pointers throughout?
+    std::unordered_map<const Expr *, size_t> locals;
     std::any result;
 
     Interpreter();
@@ -37,6 +44,8 @@ struct Interpreter : Expr::Visitor, Stmt::Visitor {
 
     void execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
                        std::shared_ptr<Environment> &env);
+
+    void resolve(const Expr &expr, size_t depth);
 
     void visit(const Grouping &g) override;
     void visit(const Literal &l) override;
@@ -72,4 +81,6 @@ private:
     bool is_true(const std::any &x) const;
 
     bool is_equal(const std::any &a, const std::any &b) const;
+
+    std::any lookup_variable(const Token &token, const Expr &expr) const;
 };

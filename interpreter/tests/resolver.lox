@@ -1,0 +1,16 @@
+var a = "global";
+{
+    fun show_global() {
+        print a;
+    }
+
+    show_global();
+    var a = "block";
+    show_global();
+
+    fun show_block() {
+        print a;
+    }
+    show_block();
+    show_global();
+}

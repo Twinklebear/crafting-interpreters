@@ -6,6 +6,7 @@
 #include "expr.h"
 #include "interpreter.h"
 #include "parser.h"
+#include "resolver.h"
 #include "scanner.h"
 #include "token.h"
 #include "util.h"
@@ -67,6 +68,13 @@ void run(const std::string &source, Interpreter &interpreter)
 
     Parser parser(tokens);
     const auto statements = parser.parse();
+
+    if (had_error) {
+        return;
+    }
+
+    Resolver resolver(interpreter);
+    resolver.resolve(statements);
 
     if (had_error) {
         return;

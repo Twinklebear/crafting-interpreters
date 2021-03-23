@@ -187,7 +187,7 @@ void Interpreter::visit(const Logical &l)
 void Interpreter::visit(const Variable &v)
 {
     try {
-        result = environment->get(v.name.lexeme);
+        result = lookup_variable(v.name, v);
     } catch (const std::runtime_error &) {
         throw InterpreterError(v.name, "Undefined variable");
     }
@@ -197,7 +197,12 @@ void Interpreter::visit(const Assign &a)
 {
     result = evaluate(*a.value);
     try {
-        environment->assign(a.name.lexeme, result);
+        auto fnd = locals.find(&a);
+        if (fnd != locals.end()) {
+            environment->assign_at(fnd->second, a.name.lexeme, result);
+        } else {
+            globals->assign(a.name.lexeme, result);
+        }
     } catch (const std::runtime_error &) {
         throw InterpreterError(a.name, "Undefined variable");
     }
@@ -270,7 +275,7 @@ void Interpreter::visit(const Var &v)
 void Interpreter::visit(const Function &f)
 {
     // Now we will create and add a callable to the globals
-    globals->define(
+    environment->define(
         f.name.lexeme,
         std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(f, environment)));
     result = std::any();
@@ -300,6 +305,11 @@ void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statem
         throw ret;
     }
     environment = prev;
+}
+
+void Interpreter::resolve(const Expr &expr, size_t depth)
+{
+    locals[&expr] = depth;
 }
 
 void Interpreter::check_type(const std::any &val,
@@ -364,4 +374,14 @@ bool Interpreter::is_equal(const std::any &a, const std::any &b) const
         return std::any_cast<std::string>(a) == std::any_cast<std::string>(b);
     }
     return std::any_cast<bool>(a) == std::any_cast<bool>(b);
+}
+
+std::any Interpreter::lookup_variable(const Token &token, const Expr &expr) const
+{
+    auto fnd = locals.find(&expr);
+    if (fnd != locals.end()) {
+        return environment->get_at(fnd->second, token.lexeme);
+    } else {
+        return globals->get(token.lexeme);
+    }
 }
