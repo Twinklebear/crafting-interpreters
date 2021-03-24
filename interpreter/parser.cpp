@@ -226,6 +226,8 @@ std::shared_ptr<Expr> Parser::assignment()
 
         if (auto var = std::dynamic_pointer_cast<Variable>(expr)) {
             return std::make_shared<Assign>(var->name, value);
+        } else if (auto get = std::dynamic_pointer_cast<Get>(expr)) {
+            return std::make_shared<Set>(get->object, get->name, value);
         }
         error(equals, "Expected expression");
     }
@@ -323,8 +325,10 @@ std::shared_ptr<Expr> Parser::call()
     while (true) {
         if (match({TokenType::LEFT_PAREN})) {
             expr = finish_call(expr);
+        } else if (match({TokenType::DOT})) {
+            Token name = consume(TokenType::IDENTIFIER, "Expected property name after '.'");
+            expr = std::make_shared<Get>(expr, name);
         } else {
-            // Note: applicable later in the book
             break;
         }
     }

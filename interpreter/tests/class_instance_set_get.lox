@@ -1,0 +1,6 @@
+class Test {
+}
+
+var t = Test();
+t.x = 1;
+print "t.x = " + t.x;

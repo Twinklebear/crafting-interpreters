@@ -156,17 +156,22 @@ void Interpreter::visit(const Call &c)
         args.push_back(evaluate(*e));
     }
 
-    try {
-        auto fcn = std::any_cast<std::shared_ptr<LoxCallable>>(callee);
-        if (args.size() != fcn->arity()) {
-            throw InterpreterError(c.paren,
-                                   "Expected " + std::to_string(fcn->arity()) +
-                                       " arguments but got " + std::to_string(args.size()));
-        }
-        result = fcn->call(*this, args);
-    } catch (const std::bad_any_cast &e) {
+    std::shared_ptr<LoxCallable> fcn;
+    if (callee.type() == typeid(std::shared_ptr<LoxCallable>)) {
+        fcn = std::any_cast<std::shared_ptr<LoxCallable>>(callee);
+    } else if (callee.type() == typeid(std::shared_ptr<LoxClass>)) {
+        fcn = std::dynamic_pointer_cast<LoxCallable>(
+            std::any_cast<std::shared_ptr<LoxClass>>(callee));
+    } else {
         throw InterpreterError(c.paren, "Only functions and classes are callable");
     }
+
+    if (args.size() != fcn->arity()) {
+        throw InterpreterError(c.paren,
+                               "Expected " + std::to_string(fcn->arity()) +
+                                   " arguments but got " + std::to_string(args.size()));
+    }
+    result = fcn->call(*this, args);
 }
 
 void Interpreter::visit(const Logical &l)
@@ -205,6 +210,28 @@ void Interpreter::visit(const Assign &a)
         }
     } catch (const std::runtime_error &) {
         throw InterpreterError(a.name, "Undefined variable");
+    }
+}
+
+void Interpreter::visit(const Get &g)
+{
+    auto obj = evaluate(*g.object);
+    if (obj.type() == typeid(std::shared_ptr<LoxInstance>)) {
+        auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
+        result = inst->get(g.name);
+    }
+}
+
+void Interpreter::visit(const Set &s)
+{
+    auto obj = evaluate(*s.object);
+    try {
+        auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
+        auto value = evaluate(*s.value);
+        inst->set(s.name, value);
+        result = value;
+    } catch (const std::bad_any_cast &e) {
+        throw InterpreterError(s.name, "Only instances have fields");
     }
 }
 
@@ -253,6 +280,8 @@ void Interpreter::visit(const Print &p)
             std::cout << std::any_cast<std::shared_ptr<LoxCallable>>(val)->to_string() << "\n";
         } else if (val.type() == typeid(std::shared_ptr<LoxClass>)) {
             std::cout << std::any_cast<std::shared_ptr<LoxClass>>(val)->to_string() << "\n";
+        } else if (val.type() == typeid(std::shared_ptr<LoxInstance>)) {
+            std::cout << std::any_cast<std::shared_ptr<LoxInstance>>(val)->to_string() << "\n";
         } else {
             std::cout << "[error]: Unsupported val type!?\n";
         }

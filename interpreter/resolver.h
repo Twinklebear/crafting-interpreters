@@ -35,6 +35,8 @@ struct Resolver : Expr::Visitor, Stmt::Visitor {
     void visit(const Logical &l) override;
     void visit(const Variable &v) override;
     void visit(const Assign &a) override;
+    void visit(const Get &g) override;
+    void visit(const Set &s) override;
 
     // Visitors for statements
     void visit(const Block &b) override;

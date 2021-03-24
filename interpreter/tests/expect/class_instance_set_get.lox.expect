@@ -1,0 +1,34 @@
+[Token]: CLASS class class l1
+[Token]: IDENTIFIER Test Test l1
+[Token]: LEFT_BRACE { l1
+[Token]: RIGHT_BRACE } l2
+[Token]: VAR var var l4
+[Token]: IDENTIFIER t t l4
+[Token]: EQUAL = l4
+[Token]: IDENTIFIER Test Test l4
+[Token]: LEFT_PAREN ( l4
+[Token]: RIGHT_PAREN ) l4
+[Token]: SEMICOLON ; l4
+[Token]: IDENTIFIER t t l5
+[Token]: DOT . l5
+[Token]: IDENTIFIER x x l5
+[Token]: EQUAL = l5
+[Token]: NUMBER 1 1 l5
+[Token]: SEMICOLON ; l5
+[Token]: PRINT print print l6
+[Token]: STRING "t.x = " t.x =  l6
+[Token]: PLUS + l6
+[Token]: IDENTIFIER t t l6
+[Token]: DOT . l6
+[Token]: IDENTIFIER x x l6
+[Token]: SEMICOLON ; l6
+[Token]: END_OF_FILE  l7
+Program:
+{CLASS Stmt 'Test'
+
+}
+{VAR Stmt 't' = (CALL (variable 'Test'))}
+{EXPRESSION Stmt (set property 'x' of (variable 't') = 1.000000)}
+{PRINT Stmt (PLUS '+' t.x =  (get property 'x' of (variable 't')))}
+------
+t.x = 1.000000

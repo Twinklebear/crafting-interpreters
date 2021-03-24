@@ -54,7 +54,9 @@ with open(sys.argv[1] + ".h", "w") as header, open(sys.argv[1] + ".cpp", "w") as
         "Literal": ["std::any value"],
         "Logical": ["std::shared_ptr<Expr> left", "Token op", "std::shared_ptr<Expr> right"],
         "Unary": ["Token op", "std::shared_ptr<Expr> expr"],
-        "Variable": ["Token name"]
+        "Variable": ["Token name"],
+        "Get": ["std::shared_ptr<Expr> object", "Token name"],
+        "Set": ["std::shared_ptr<Expr> object", "Token name", "std::shared_ptr<Expr> value"]
     }
 
     statements = {

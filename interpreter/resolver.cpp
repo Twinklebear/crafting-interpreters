@@ -55,6 +55,17 @@ void Resolver::visit(const Assign &a)
     resolve_local(a, a.name);
 }
 
+void Resolver::visit(const Get &g)
+{
+    resolve(g.object);
+}
+
+void Resolver::visit(const Set &s)
+{
+    resolve(s.value);
+    resolve(s.object);
+}
+
 void Resolver::visit(const Block &b)
 {
     begin_scope();
@@ -117,8 +128,6 @@ void Resolver::visit(const Class &c)
 {
     declare(c.name);
     define(c.name);
-
-    // TODO: resolving methods
 }
 
 void Resolver::begin_scope()

@@ -74,6 +74,22 @@ void ASTPrinter::visit(const Assign &a)
     text += ")";
 }
 
+void ASTPrinter::visit(const Get &g)
+{
+    text += "(get property '" + g.name.lexeme + "' of ";
+    g.object->accept(*this);
+    text += ")";
+}
+
+void ASTPrinter::visit(const Set &s)
+{
+    text += "(set property '" + s.name.lexeme + "' of ";
+    s.object->accept(*this);
+    text += " = ";
+    s.value->accept(*this);
+    text += ")";
+}
+
 const std::string &ProgramPrinter::print(const std::vector<std::shared_ptr<Stmt>> &statements)
 {
     text = "";
