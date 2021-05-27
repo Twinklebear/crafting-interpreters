@@ -2,7 +2,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "LoxLexer.h"
 #include "LoxParser.h"
+#include "util.h"
 /*
 #include "ast_printer.h"
 #include "interpreter.h"
@@ -10,8 +12,9 @@
 #include "resolver.h"
 #include "scanner.h"
 #include "token.h"
-#include "util.h"
 */
+
+using namespace loxgrammar;
 
 void run_file(const std::string &file);
 void run_prompt();
@@ -35,6 +38,21 @@ int main(int argc, char **argv)
 
 void run_file(const std::string &file)
 {
+    const std::string content = get_file_content(file);
+    antlr4::ANTLRInputStream input(content);
+    LoxLexer lexer(&input);
+    antlr4::CommonTokenStream tokens(&lexer);
+    tokens.fill();
+
+    for (const auto &t : tokens.getTokens()) {
+        std::cout << t->toString() << "\n";
+    }
+
+    LoxParser parser(&tokens);
+    antlr4::tree::ParseTree *tree = parser.file();
+
+    std::cout << tree->toStringTree(&parser) << "\n";
+
     /*
     try {
         Interpreter interpreter;
@@ -51,16 +69,28 @@ void run_file(const std::string &file)
 
 void run_prompt()
 {
-    /*
-        std::cout << "> ";
-        std::string line;
-        Interpreter interpreter;
-        while (std::getline(std::cin, line)) {
-            run(line, interpreter);
-            std::cout << "> ";
-            had_error = false;
+    std::cout << "> ";
+    std::string line;
+    // Interpreter interpreter;
+    while (std::getline(std::cin, line)) {
+        antlr4::ANTLRInputStream input(line);
+        LoxLexer lexer(&input);
+        antlr4::CommonTokenStream tokens(&lexer);
+        tokens.fill();
+
+        for (const auto &t : tokens.getTokens()) {
+            std::cout << t->toString() << "\n";
         }
-        */
+
+        LoxParser parser(&tokens);
+        antlr4::tree::ParseTree *tree = parser.statement();
+
+        std::cout << tree->toStringTree(&parser) << "\n";
+
+        // run(line, interpreter);
+        std::cout << "> ";
+        had_error = false;
+    }
 }
 
 /*

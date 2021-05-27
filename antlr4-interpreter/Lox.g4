@@ -8,11 +8,13 @@ declaration: functionDecl
            | statement
            ;
 
-functionDecl: 'fun' IDENTIFIER '(' parameters? ')' block ; 
+functionDecl: 'fun' function ;
 
-classDecl: 'class' IDENTIFIER '{' functionDecl* '}' ;
+classDecl: 'class' IDENTIFIER '{' function* '}' ;
 
-varDecl: 'var' IDENTIFIER ('=' expr) ? ';' ;
+varDecl: 'var' IDENTIFIER ('=' expr)? ';' ;
+
+function: IDENTIFIER '(' parameters? ')' block ;
 
 parameters: IDENTIFIER (',' IDENTIFIER)? ;
 
@@ -31,7 +33,9 @@ ifStmt: 'if' '(' expr ')' statement ('else' statement)? ;
 
 whileStmt: 'while' '(' expr ')' statement ;
 
-forStmt: 'for' '(' (varDecl | expr)? ';' expr? ';' expr? ')' statement ;
+forStmt: 'for' '(' (varDeclStmt | expr)? ';' expr? ';' expr? ')' statement ;
+
+varDeclStmt: 'var' IDENTIFIER ('=' expr)? ;
 
 printStmt: 'print' expr ';' ;
 
@@ -73,7 +77,7 @@ expr: ('-' | '!') expr               # Unary
     | expr '*' expr                  # Mult
     | expr '/' expr                  # Mult
     | expr ('+' | '-') expr          # AddSub
-    | expr ('<' | '<=' | '>' | '>=') # Comparison
+    | expr ('<' | '<=' | '>' | '>=') expr # Comparison
     | expr ('!=' | '==') expr        # Equality
     | expr 'and' expr                # LogicAnd
     | expr 'or'  expr                # LogicOr
