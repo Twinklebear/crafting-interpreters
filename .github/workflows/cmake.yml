@@ -36,6 +36,6 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/interpreter/build
       env:
-        TEST_DIR: ${{github.workspace}}/interpreter/tests/
+        TEST_DIR: ${{github.workspace}}/tests/
       shell: bash
-      run: ../tests/run_tests.py
+      run: ${{github.workspace}}/tests/run_tests.py
