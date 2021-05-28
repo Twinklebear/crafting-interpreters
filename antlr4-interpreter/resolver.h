@@ -3,9 +3,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "LoxBaseVisitor.h"
+#include "antlr4-common.h"
 #include "environment.h"
-#include "expr.h"
 #include "interpreter.h"
+
+using namespace loxgrammar;
 
 enum class FunctionType { NONE, FUNCTION };
 
@@ -14,7 +17,7 @@ struct VariableStatus {
     bool read = false;
 };
 
-struct Resolver : Expr::Visitor, Stmt::Visitor {
+struct Resolver : public LoxBaseVisitor {
     // Treated as a stack, but we need to access scopes by index as well
     // when resolving variables
     std::vector<std::unordered_map<std::string, VariableStatus>> scopes;
@@ -24,43 +27,40 @@ struct Resolver : Expr::Visitor, Stmt::Visitor {
 
     Resolver(Interpreter &interpreter);
 
-    void resolve(const std::vector<std::shared_ptr<Stmt>> &statements);
-
     // Visitors for expressions
-    void visit(const Grouping &g) override;
-    void visit(const Literal &l) override;
-    void visit(const Unary &u) override;
-    void visit(const Binary &b) override;
-    void visit(const Call &c) override;
-    void visit(const Logical &l) override;
-    void visit(const Variable &v) override;
-    void visit(const Assign &a) override;
-    void visit(const Get &g) override;
-    void visit(const Set &s) override;
+    antlrcpp::Any visitPrimary(LoxParser::PrimaryContext *ctx) override;
+    // void visit(const Literal &l) override;
+    // void visit(const Variable &v) override;
 
-    // Visitors for statements
-    void visit(const Block &b) override;
-    void visit(const Expression &e) override;
-    void visit(const If &f) override;
-    void visit(const While &w) override;
-    void visit(const Print &p) override;
-    void visit(const Var &v) override;
-    void visit(const Function &f) override;
-    void visit(const Return &r) override;
-    void visit(const Class &c) override;
+    // TODO: Assign can also have a callExpr on the left which it needs to evaluate,
+    // e.g., when setting a struct member variable
+    antlrcpp::Any visitAssign(LoxParser::AssignContext *ctx) override;
+    // void visit(const Assign &a) override;
+    // void visit(const Set &s) override;
+
+    antlrcpp::Any visitBlock(LoxParser::BlockContext *ctx) override;
+    // void visit(const Block &b) override;
+
+    antlrcpp::Any visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx) override;
+    // void visit(const Var &v) override;
+
+    antlrcpp::Any visitFunction(LoxParser::FunctionContext *ctx) override;
+    // void visit(const Function &f) override;
+
+    antlrcpp::Any visitReturnStmt(LoxParser::ReturnStmtContext *ctx) override;
+    // void visit(const Return &r) override;
+
+    antlrcpp::Any visitClassDecl(LoxParser::ClassDeclContext *ctx) override;
+    // void visit(const Class &c) override;
 
 private:
     void begin_scope();
-
     void end_scope();
 
-    void resolve(const std::shared_ptr<Stmt> &statement);
-    void resolve(const std::shared_ptr<Expr> &expr);
+    void declare(const antlr4::Token *name);
+    void define(const antlr4::Token *name);
 
-    void declare(const Token &name);
-    void define(const Token &name);
+    void resolve_local(LoxParser::ExprContext *expr, const antlr4::Token *name);
 
-    void resolve_local(const Expr &expr, const Token &name);
-
-    void resolve_function(const Function &f, const FunctionType type);
+    void resolve_function(LoxParser::FunctionContext *f, const FunctionType type);
 };

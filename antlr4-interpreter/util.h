@@ -1,7 +1,8 @@
 #pragma once
 
+#include <any>
 #include <string>
-#include "token.h"
+#include "antlr4-runtime.h"
 
 #ifdef _MSC_VER
 #define __PRETTY_FUNCTION__ __FUNCSIG__
@@ -15,7 +16,7 @@ void report(int line, const std::string &where, const std::string &msg);
 
 void error(int line, const std::string &msg);
 
-void error(const Token &t, const std::string &msg);
+void error(const antlr4::Token *t, const std::string &msg);
 
 std::string pretty_type_name(const std::any &t);
 

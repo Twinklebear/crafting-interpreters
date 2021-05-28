@@ -4,10 +4,10 @@
 #include <vector>
 #include "LoxLexer.h"
 #include "LoxParser.h"
+#include "interpreter.h"
 #include "util.h"
 /*
 #include "ast_printer.h"
-#include "interpreter.h"
 #include "parser.h"
 #include "resolver.h"
 #include "scanner.h"

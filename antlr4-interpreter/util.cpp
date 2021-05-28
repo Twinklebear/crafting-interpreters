@@ -4,6 +4,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include "antlr4-runtime.h"
 
 bool had_error = false;
 
@@ -27,14 +28,10 @@ void error(int line, const std::string &msg)
     report(line, "", msg);
 }
 
-void error(const Token &t, const std::string &msg)
+void error(const antlr4::Token *t, const std::string &msg)
 {
     had_error = true;
-    if (t.type == TokenType::END_OF_FILE) {
-        report(t.line, " at end of file", msg);
-    } else {
-        report(t.line, " at '" + t.lexeme + "'", msg);
-    }
+    report(t->getLine(), " at '" + t->getText() + "'", msg);
 }
 
 std::string pretty_type_name(const std::any &t)

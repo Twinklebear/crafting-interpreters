@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include "antlr4-common.h"
 #include "lox_callable.h"
 
 struct LoxClass : LoxCallable {
@@ -24,7 +25,7 @@ struct LoxInstance {
 
     std::string to_string() const;
 
-    std::any get(const Token &name);
+    std::any get(const antlr4::Token *name);
 
-    void set(const Token &name, const std::any &value);
+    void set(const antlr4::Token *name, const std::any &value);
 };

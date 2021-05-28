@@ -75,7 +75,7 @@ primary: 'true'
 expr: ('-' | '!') expr               # Unary
     | callExpr                       # Call
     | expr '*' expr                  # Mult
-    | expr '/' expr                  # Mult
+    | expr '/' expr                  # Div
     | expr ('+' | '-') expr          # AddSub
     | expr ('<' | '<=' | '>' | '>=') expr # Comparison
     | expr ('!=' | '==') expr        # Equality
