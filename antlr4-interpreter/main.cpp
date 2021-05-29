@@ -120,7 +120,7 @@ if (had_error) {
 ProgramPrinter printer;
 std::cout << "Program:\n" << printer.print(statements) << "------\n";
 
+// TODO: try/catch interpretererror and print errors here
 interpreter.evaluate(statements);
 }
 */
-

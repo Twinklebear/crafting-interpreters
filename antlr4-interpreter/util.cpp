@@ -34,24 +34,19 @@ void error(const antlr4::Token *t, const std::string &msg)
     report(t->getLine(), " at '" + t->getText() + "'", msg);
 }
 
-std::string pretty_type_name(const std::any &t)
+std::string pretty_type_name(const antlrcpp::Any &t)
 {
-    return pretty_type_name(t.type());
-}
-
-std::string pretty_type_name(const std::type_info &t)
-{
-    if (t == typeid(float)) {
+    if (t.is<float>()) {
         return "float";
     }
-    if (t == typeid(std::string)) {
+    if (t.is<std::string>()) {
         return "string";
     }
-    if (t == typeid(bool)) {
+    if (t.is<bool>()) {
         return "bool";
     }
-    if (t == typeid(void)) {
+    if (t.isNull()) {
         return "nil";
     }
-    return std::string("UNHANDLED TYPE ") + t.name();
+    return std::string("UNHANDLED TYPE") + antlrcpp::toString(t);
 }

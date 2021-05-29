@@ -4,32 +4,12 @@
 #include "lox_class.h"
 #include "util.h"
 
-InterpreterError::InterpreterError(const Token &t, const std::string &msg)
+InterpreterError::InterpreterError(const antlr4::Token *t, const std::string &msg)
     : token(t), message(msg)
 {
 }
 
-ReturnControlFlow::ReturnControlFlow(const std::any &value) : value(value) {}
-
-void Interpreter::evaluate(const std::vector<std::shared_ptr<Stmt>> &statements)
-{
-    result = std::any();
-    try {
-        for (const auto &st : statements) {
-            st->accept(*this);
-            result = std::any();
-        }
-    } catch (const InterpreterError &e) {
-        error(e.token, e.message);
-    }
-}
-
-const std::any &Interpreter::evaluate(const Expr &expr)
-{
-    result = std::any();
-    expr.accept(*this);
-    return result;
-}
+ReturnControlFlow::ReturnControlFlow(const antlrcpp::Any &value) : value(value) {}
 
 Interpreter::Interpreter()
     : float_id(std::type_index(typeid(float))),
@@ -49,133 +29,188 @@ Interpreter::Interpreter()
                     std::shared_ptr<LoxCallable>(std::make_shared<CITestAdd>()));
 }
 
-void Interpreter::visit(const Grouping &g)
+void Interpreter::resolve(const LoxParser::ExprContext *expr, size_t depth)
 {
-    result = evaluate(*g.expr);
+    locals[expr] = depth;
 }
 
-void Interpreter::visit(const Literal &l)
+antlrcpp::Any Interpreter::visitPrimary(LoxParser::PrimaryContext *ctx)
 {
-    result = l.value;
-}
-
-void Interpreter::visit(const Unary &u)
-{
-    std::any right = evaluate(*u.expr);
-    switch (u.op.type) {
-    case TokenType::MINUS:
-        check_type(right, {float_id}, u.op);
-        result = -std::any_cast<float>(right);
-        break;
-    case TokenType::BANG:
-        result = !is_true(right);
-        break;
-    default:
-        break;
+    // If we have an identifier it's a variable primary expression, if not
+    // it's a literal value
+    if (ctx->IDENTIFIER()) {
+        try {
+            return lookup_variable(ctx->IDENTIFIER()->getSymbol(), ctx);
+        } catch (const std::runtime_error &) {
+            throw InterpreterError(ctx->IDENTIFIER()->getSymbol(), "Undefined variable");
+        }
+    } else if (ctx->NUMBER()) {
+        return std::stof(ctx->NUMBER()->getText());
+    } else if (ctx->STRING()) {
+        return ctx->STRING()->getText();
+    } else if (ctx->getText() == "true") {
+        return true;
+    } else if (ctx->getText() == "false") {
+        return false;
     }
+    return antlrcpp::Any();
 }
 
-void Interpreter::visit(const Binary &b)
+antlrcpp::Any Interpreter::visitUnary(LoxParser::UnaryContext *ctx)
 {
-    std::any left = evaluate(*b.left);
-    std::any right = evaluate(*b.right);
+    auto rhs = visit(ctx->expr());
+    if (ctx->MINUS()) {
+        check_type(rhs, {float_id}, ctx->MINUS()->getSymbol());
+        return -rhs.as<float>();
+    }
+    return !is_true(rhs);
+}
 
-    switch (b.op.type) {
-    case TokenType::PLUS:
-        check_type(right, {float_id, string_id}, b.op);
-        check_type(left, {float_id, string_id}, b.op);
-        if (left.type() == typeid(float) && right.type() == typeid(float)) {
-            result = std::any_cast<float>(left) + std::any_cast<float>(right);
-        } else if (left.type() == typeid(std::string) && right.type() == typeid(std::string)) {
-            result = std::any_cast<std::string>(left) + std::any_cast<std::string>(right);
+antlrcpp::Any Interpreter::visitDiv(LoxParser::DivContext *ctx)
+{
+    auto lhs = visit(ctx->expr(0));
+    auto rhs = visit(ctx->expr(1));
+
+    check_same_type(lhs, rhs, ctx->getStart());
+    check_type(lhs, {float_id}, ctx->getStart());
+    if (rhs.as<float>() == 0.f) {
+        throw InterpreterError(ctx->getStart(), "Division by 0");
+    }
+    return lhs.as<float>() / rhs.as<float>();
+}
+
+antlrcpp::Any Interpreter::visitMult(LoxParser::MultContext *ctx)
+{
+    auto lhs = visit(ctx->expr(0));
+    auto rhs = visit(ctx->expr(1));
+    check_same_type(lhs, rhs, ctx->getStart());
+    check_type(lhs, {float_id}, ctx->getStart());
+    return lhs.as<float>() * rhs.as<float>();
+}
+
+antlrcpp::Any Interpreter::visitAddSub(LoxParser::AddSubContext *ctx)
+{
+    auto lhs = visit(ctx->expr(0));
+    auto rhs = visit(ctx->expr(1));
+
+    // Addition
+    if (ctx->PLUS()) {
+        check_type(lhs, {float_id, string_id}, ctx->PLUS()->getSymbol());
+        check_type(rhs, {float_id, string_id}, ctx->PLUS()->getSymbol());
+
+        if (lhs.is<float>() && rhs.is<float>()) {
+            return lhs.as<float>() + rhs.as<float>();
+        } else if (lhs.is<std::string>() && rhs.is<std::string>()) {
+            return lhs.as<std::string>() + rhs.as<std::string>();
         } else {
             // We know one is a string and one is a float
-            if (left.type() == typeid(float)) {
-                result = std::to_string(std::any_cast<float>(left)) +
-                         std::any_cast<std::string>(right);
+            if (lhs.is<float>()) {
+                return std::to_string(lhs.as<float>()) + rhs.as<std::string>();
             } else {
-                result = std::any_cast<std::string>(left) +
-                         std::to_string(std::any_cast<float>(right));
+                return lhs.as<std::string>() + std::to_string(rhs.as<float>());
             }
         }
-        break;
-    case TokenType::MINUS:
-        check_same_type(left, right, b.op);
-        check_type(left, {float_id, string_id}, b.op);
-        result = std::any_cast<float>(left) - std::any_cast<float>(right);
-        break;
-    case TokenType::SLASH:
-        check_same_type(left, right, b.op);
-        check_type(left, {float_id}, b.op);
-        if (std::any_cast<float>(right) == 0.f) {
-            throw InterpreterError(b.op, "Division by 0");
+    }
+
+    // Subtraction
+    check_same_type(lhs, rhs, ctx->MINUS()->getSymbol());
+    check_type(rhs, {float_id}, ctx->PLUS()->getSymbol());
+    return lhs.as<float>() - rhs.as<float>();
+}
+
+antlrcpp::Any Interpreter::visitComparison(LoxParser::ComparisonContext *ctx)
+{
+    /*
+    std::any left = evaluate(*b.left);
+    std::any right = evaluate(*b.right);
+case TokenType::GREATER:
+    check_same_type(left, right, b.op);
+    check_type(left, {float_id}, b.op);
+    result = std::any_cast<float>(left) > std::any_cast<float>(right);
+    break;
+case TokenType::GREATER_EQUAL:
+    check_same_type(left, right, b.op);
+    check_type(left, {float_id}, b.op);
+    result = std::any_cast<float>(left) >= std::any_cast<float>(right);
+    break;
+case TokenType::LESS:
+    check_same_type(left, right, b.op);
+    check_type(left, {float_id}, b.op);
+    result = std::any_cast<float>(left) < std::any_cast<float>(right);
+    break;
+case TokenType::LESS_EQUAL:
+    check_same_type(left, right, b.op);
+    check_type(left, {float_id}, b.op);
+    result = std::any_cast<float>(left) <= std::any_cast<float>(right);
+    break;
+    */
+}
+antlrcpp::Any Interpreter::visitEquality(LoxParser::EqualityContext *ctx)
+{
+    /*
+    std::any left = evaluate(*b.left);
+    std::any right = evaluate(*b.right);
+case TokenType::BANG_EQUAL:
+    result = !is_equal(left, right);
+    break;
+case TokenType::EQUAL_EQUAL:
+    result = is_equal(left, right);
+    break;
+    */
+}
+
+antlrcpp::Any Interpreter::visitCallExpr(LoxParser::CallExprContext *ctx)
+{
+    /*
+    void Interpreter::visit(const Call &c)
+    {
+        auto callee = evaluate(*c.callee);
+        std::vector<std::any> args;
+        for (const auto &e : c.args) {
+            args.push_back(evaluate(*e));
         }
-        result = std::any_cast<float>(left) / std::any_cast<float>(right);
-        break;
-    case TokenType::STAR:
-        check_same_type(left, right, b.op);
-        check_type(left, {float_id}, b.op);
-        result = std::any_cast<float>(left) * std::any_cast<float>(right);
-        break;
-    case TokenType::BANG_EQUAL:
-        result = !is_equal(left, right);
-        break;
-    case TokenType::EQUAL_EQUAL:
-        result = is_equal(left, right);
-        break;
-    case TokenType::GREATER:
-        check_same_type(left, right, b.op);
-        check_type(left, {float_id}, b.op);
-        result = std::any_cast<float>(left) > std::any_cast<float>(right);
-        break;
-    case TokenType::GREATER_EQUAL:
-        check_same_type(left, right, b.op);
-        check_type(left, {float_id}, b.op);
-        result = std::any_cast<float>(left) >= std::any_cast<float>(right);
-        break;
-    case TokenType::LESS:
-        check_same_type(left, right, b.op);
-        check_type(left, {float_id}, b.op);
-        result = std::any_cast<float>(left) < std::any_cast<float>(right);
-        break;
-    case TokenType::LESS_EQUAL:
-        check_same_type(left, right, b.op);
-        check_type(left, {float_id}, b.op);
-        result = std::any_cast<float>(left) <= std::any_cast<float>(right);
-        break;
-    default:
-        break;
+
+        std::shared_ptr<LoxCallable> fcn;
+        if (callee.type() == typeid(std::shared_ptr<LoxCallable>)) {
+            fcn = std::any_cast<std::shared_ptr<LoxCallable>>(callee);
+        } else if (callee.type() == typeid(std::shared_ptr<LoxClass>)) {
+            fcn = std::dynamic_pointer_cast<LoxCallable>(
+                std::any_cast<std::shared_ptr<LoxClass>>(callee));
+        } else {
+            throw InterpreterError(c.paren, "Only functions and classes are callable");
+        }
+
+        if (args.size() != fcn->arity()) {
+            throw InterpreterError(c.paren,
+                                   "Expected " + std::to_string(fcn->arity()) +
+                                       " arguments but got " + std::to_string(args.size()));
+        }
+        result = fcn->call(*this, args);
     }
+    */
 }
 
-void Interpreter::visit(const Call &c)
+antlrcpp::Any Interpreter::visitLogicOr(LoxParser::LogicOrContext *ctx)
 {
-    auto callee = evaluate(*c.callee);
-    std::vector<std::any> args;
-    for (const auto &e : c.args) {
-        args.push_back(evaluate(*e));
+    /*
+    // This would be visit
+    result = evaluate(*l.left);
+
+    if (l.op.type == TokenType::OR) {
+        if (is_true(result)) {
+            return true;
+        }
     }
 
-    std::shared_ptr<LoxCallable> fcn;
-    if (callee.type() == typeid(std::shared_ptr<LoxCallable>)) {
-        fcn = std::any_cast<std::shared_ptr<LoxCallable>>(callee);
-    } else if (callee.type() == typeid(std::shared_ptr<LoxClass>)) {
-        fcn = std::dynamic_pointer_cast<LoxCallable>(
-            std::any_cast<std::shared_ptr<LoxClass>>(callee));
-    } else {
-        throw InterpreterError(c.paren, "Only functions and classes are callable");
-    }
-
-    if (args.size() != fcn->arity()) {
-        throw InterpreterError(c.paren,
-                               "Expected " + std::to_string(fcn->arity()) +
-                                   " arguments but got " + std::to_string(args.size()));
-    }
-    result = fcn->call(*this, args);
+    // This would be visit
+    result = evaluate(*l.right);
+    */
 }
 
-void Interpreter::visit(const Logical &l)
+antlrcpp::Any Interpreter::visitLogicAnd(LoxParser::LogicAndContext *ctx)
 {
+    /*
+    // This would be visit
     result = evaluate(*l.left);
 
     if (l.op.type == TokenType::OR) {
@@ -186,68 +221,97 @@ void Interpreter::visit(const Logical &l)
         return;
     }
 
+    // This would be visit
     result = evaluate(*l.right);
+    return result;
+    */
 }
 
-void Interpreter::visit(const Variable &v)
+antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
 {
-    try {
-        result = lookup_variable(v.name, v);
-    } catch (const std::runtime_error &) {
-        throw InterpreterError(v.name, "Undefined variable");
-    }
-}
+    /*
 
 void Interpreter::visit(const Assign &a)
 {
-    result = evaluate(*a.value);
-    try {
-        auto fnd = locals.find(&a);
-        if (fnd != locals.end()) {
-            environment->assign_at(fnd->second, a.name.lexeme, result);
-        } else {
-            globals->assign(a.name.lexeme, result);
-        }
-    } catch (const std::runtime_error &) {
-        throw InterpreterError(a.name, "Undefined variable");
+result = evaluate(*a.value);
+try {
+    auto fnd = locals.find(&a);
+    if (fnd != locals.end()) {
+        environment->assign_at(fnd->second, a.name.lexeme, result);
+    } else {
+        globals->assign(a.name.lexeme, result);
     }
+} catch (const std::runtime_error &) {
+    throw InterpreterError(a.name, "Undefined variable");
+}
 }
 
 void Interpreter::visit(const Get &g)
 {
-    auto obj = evaluate(*g.object);
-    if (obj.type() == typeid(std::shared_ptr<LoxInstance>)) {
-        auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
-        result = inst->get(g.name);
+auto obj = evaluate(*g.object);
+if (obj.type() == typeid(std::shared_ptr<LoxInstance>)) {
+    auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
+    result = inst->get(g.name);
+}
+}
+*/
+    /*
+    void Interpreter::visit(const Set &s)
+    {
+        auto obj = evaluate(*s.object);
+        try {
+            auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
+            auto value = evaluate(*s.value);
+            inst->set(s.name, value);
+            result = value;
+        } catch (const std::bad_any_cast &e) {
+            throw InterpreterError(s.name, "Only instances have fields");
+        }
     }
+    */
 }
 
-void Interpreter::visit(const Set &s)
+antlrcpp::Any visitBlock(LoxParser::BlockContext *ctx)
 {
-    auto obj = evaluate(*s.object);
-    try {
-        auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
-        auto value = evaluate(*s.value);
-        inst->set(s.name, value);
-        result = value;
-    } catch (const std::bad_any_cast &e) {
-        throw InterpreterError(s.name, "Only instances have fields");
+    /*
+    void Interpreter::visit(const Block &b)
+    {
+        auto env = std::make_shared<Environment>(environment);
+        execute_block(b.statements, env);
+
+        auto prev = environment;
+        environment = env;
+        try {
+            evaluate(statements);
+        } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
+            // Need to restore environments as we return out
+            // TODO: Same would apply for break
+            // TODO: Needs a better way to handle the environments with the call stack
+            environment = prev;
+            throw ret;
+        }
+        environment = prev;
+
+        result = std::any();
     }
+    */
 }
 
-void Interpreter::visit(const Block &b)
+antlrcpp::Any Interpreter::visitExprStmt(LoxParser::ExprStmtContext *ctx)
 {
-    auto env = std::make_shared<Environment>(environment);
-    execute_block(b.statements, env);
-    result = std::any();
-}
-
+    // we do want to override b/c expressions shouldn't return a value
+    /*
 void Interpreter::visit(const Expression &e)
 {
     evaluate(*e.expr);
     result = std::any();
 }
+*/
+}
 
+antlrcpp::Any Interpreter::visitIfStmt(LoxParser::IfStmtContext *ctx)
+{
+    /*
 void Interpreter::visit(const If &f)
 {
     if (is_true(evaluate(*f.condition))) {
@@ -257,7 +321,12 @@ void Interpreter::visit(const If &f)
     }
     result = std::any();
 }
+*/
+}
 
+antlrcpp::Any Interpreter::visitWhileStmt(LoxParser::WhileStmtContext *ctx)
+{
+    /*
 void Interpreter::visit(const While &w)
 {
     while (is_true(evaluate(*w.condition))) {
@@ -265,7 +334,18 @@ void Interpreter::visit(const While &w)
     }
     result = std::any();
 }
+*/
+}
 
+antlrcpp::Any Interpreter::visitForStmt(LoxParser::ForStmtContext *ctx)
+{
+    // Now we do need to treat for separately, b/c we don't have the parser
+    // convert it to a while
+}
+
+antlrcpp::Any Interpreter::visitPrintStmt(LoxParser::PrintStmtContext *ctx)
+{
+    /*
 void Interpreter::visit(const Print &p)
 {
     std::any val = evaluate(*p.expr);
@@ -290,7 +370,12 @@ void Interpreter::visit(const Print &p)
     }
     result = std::any();
 }
+*/
+}
 
+antlrcpp::Any Interpreter::visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx)
+{
+    /*
 void Interpreter::visit(const Var &v)
 {
     std::any initializer;
@@ -302,7 +387,12 @@ void Interpreter::visit(const Var &v)
 
     result = std::any();
 }
+*/
+}
 
+antlrcpp::Any Interpreter::visitFunction(LoxParser::FunctionContext *ctx)
+{
+    /*
 void Interpreter::visit(const Function &f)
 {
     // Now we will create and add a callable to the globals
@@ -311,7 +401,12 @@ void Interpreter::visit(const Function &f)
         std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(f, environment)));
     result = std::any();
 }
+*/
+}
 
+antlrcpp::Any Interpreter::visitReturnStmt(LoxParser::ReturnStmtContext *ctx)
+{
+    /*
 void Interpreter::visit(const Return &r)
 {
     std::any return_result;
@@ -320,42 +415,33 @@ void Interpreter::visit(const Return &r)
     }
     throw std::make_shared<ReturnControlFlow>(return_result);
 }
+*/
+}
 
+antlrcpp::Any Interpreter::visitClassDecl(LoxParser::ClassDeclContext *ctx)
+{
+    /*
 void Interpreter::visit(const Class &c)
 {
     environment->define(c.name.lexeme, std::any());
     auto lox_class = std::make_shared<LoxClass>(c.name.lexeme);
     environment->assign(c.name.lexeme, lox_class);
 }
-
-void Interpreter::execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
-                                std::shared_ptr<Environment> &env)
-{
-    auto prev = environment;
-    environment = env;
-    try {
-        evaluate(statements);
-    } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
-        // Need to restore environments as we return out
-        // TODO: Same would apply for break
-        // TODO: Needs a better way to handle the environments with the call stack
-        environment = prev;
-        throw ret;
-    }
-    environment = prev;
+*/
 }
 
-void Interpreter::resolve(const Expr &expr, size_t depth)
-{
-    locals[&expr] = depth;
-}
-
-void Interpreter::check_type(const std::any &val,
+void Interpreter::check_type(const antlrcpp::Any &val,
                              const std::vector<std::type_index> &valid_types,
-                             const Token &t)
+                             const antlr4::Token *t)
 {
     for (const auto &t : valid_types) {
-        if (std::type_index(val.type()) == t) {
+        if (t == float_id && val.is<float>()) {
+            return;
+        }
+        if (t == string_id && val.is<std::string>()) {
+            return;
+        }
+        if (t == bool_id && val.is<bool>()) {
             return;
         }
     }
@@ -370,56 +456,67 @@ void Interpreter::check_type(const std::any &val,
     throw InterpreterError(t, error_msg);
 }
 
-void Interpreter::check_same_type(const std::any &a, const std::any &b, const Token &t) const
+void Interpreter::check_same_type(const antlrcpp::Any &a,
+                                  const antlrcpp::Any &b,
+                                  const antlr4::Token *t) const
 {
-    if (a.type() != b.type()) {
+    // TODO: will need a compile time type checker anyways, but this is a bit annoying
+    // compared to the C++17 std::any::type() method
+    // Should be a better path to doing this via a separate type checking pass
+    const bool type_match = (a.is<float>() && b.is<float>()) ||
+                            (a.is<std::string>() && b.is<std::string>()) ||
+                            (a.is<bool>() && b.is<bool>()) || (a.is<void>() && b.is<void>());
+
+    if (!type_match) {
         throw InterpreterError(
             t, "Expected " + pretty_type_name(a) + " but got " + pretty_type_name(b));
     }
 }
 
-bool Interpreter::is_true(const std::any &x) const
+bool Interpreter::is_true(const antlrcpp::Any &x) const
 {
-    const auto ty = std::type_index(x.type());
-    if (ty == nil_id) {
+    if (x.is<void>()) {
         return false;
     }
-    if (ty == bool_id) {
-        return std::any_cast<bool>(x);
+    if (x.is<bool>()) {
+        return x.as<bool>();
     }
-    if (ty == float_id) {
-        return std::any_cast<float>(x) != 0.f;
+    if (x.is<float>()) {
+        return x.as<float>() != 0.f;
     }
     // All strings are "true"
     return true;
 }
 
-bool Interpreter::is_equal(const std::any &a, const std::any &b) const
+bool Interpreter::is_equal(const antlrcpp::Any &a, const antlrcpp::Any &b) const
 {
     // Comparing objects of different types is always false
-    if (a.type() != b.type()) {
+    const bool type_match = (a.is<float>() && b.is<float>()) ||
+                            (a.is<std::string>() && b.is<std::string>()) ||
+                            (a.is<bool>() && b.is<bool>()) || (a.is<void>() && b.is<void>());
+    if (!type_match) {
         return false;
     }
 
-    const auto a_ty = std::type_index(a.type());
-    if (a_ty == nil_id) {
+    if (a.is<void>()) {
         return true;
     }
-    if (a_ty == float_id) {
-        return std::any_cast<float>(a) == std::any_cast<float>(b);
+    if (a.is<float>()) {
+        return a.as<float>() == b.as<float>();
     }
-    if (a_ty == string_id) {
-        return std::any_cast<std::string>(a) == std::any_cast<std::string>(b);
+    if (a.is<std::string>()) {
+        return a.as<std::string>() == b.as<std::string>();
     }
-    return std::any_cast<bool>(a) == std::any_cast<bool>(b);
+    return a.as<bool>() == b.as<bool>();
 }
 
-std::any Interpreter::lookup_variable(const Token &token, const Expr &expr) const
+antlrcpp::Any Interpreter::lookup_variable(const antlr4::Token *token,
+                                           const LoxParser::ExprContext *expr) const
 {
-    auto fnd = locals.find(&expr);
+    auto fnd = locals.find(expr);
     if (fnd != locals.end()) {
-        return environment->get_at(fnd->second, token.lexeme);
+        return environment->get_at(fnd->second, token->getText());
     } else {
-        return globals->get(token.lexeme);
+        return globals->get(token->getText());
     }
 }

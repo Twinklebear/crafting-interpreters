@@ -4,12 +4,12 @@
 
 Environment::Environment(std::shared_ptr<Environment> &enclosing) : enclosing(enclosing) {}
 
-void Environment::define(const std::string &name, const std::any &val)
+void Environment::define(const std::string &name, const antlrcpp::Any &val)
 {
     values[name] = val;
 }
 
-void Environment::assign(const std::string &name, const std::any &val)
+void Environment::assign(const std::string &name, const antlrcpp::Any &val)
 {
     auto fnd = values.find(name);
     if (fnd != values.end()) {
@@ -21,7 +21,9 @@ void Environment::assign(const std::string &name, const std::any &val)
     }
 }
 
-void Environment::assign_at(const size_t depth, const std::string &name, const std::any &val)
+void Environment::assign_at(const size_t depth,
+                            const std::string &name,
+                            const antlrcpp::Any &val)
 {
     auto &a = ancestor(depth);
     auto fnd = a.values.find(name);
@@ -32,7 +34,7 @@ void Environment::assign_at(const size_t depth, const std::string &name, const s
     }
 }
 
-std::any Environment::get(const std::string &name) const
+antlrcpp::Any Environment::get(const std::string &name) const
 {
     auto fnd = values.find(name);
     if (fnd != values.end()) {
@@ -43,7 +45,7 @@ std::any Environment::get(const std::string &name) const
     throw std::runtime_error("Undefined variable '" + name + "'");
 }
 
-std::any Environment::get_at(const size_t depth, const std::string &name) const
+antlrcpp::Any Environment::get_at(const size_t depth, const std::string &name) const
 {
     const auto &a = ancestor(depth);
     auto fnd = a.values.find(name);

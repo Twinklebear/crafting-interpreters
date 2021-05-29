@@ -11,16 +11,16 @@
 using namespace loxgrammar;
 
 struct InterpreterError {
-    antlr4::Token *token;
+    const antlr4::Token *token;
     std::string message;
 
     InterpreterError(const antlr4::Token *t, const std::string &msg);
 };
 
 struct ReturnControlFlow {
-    std::any value;
+    antlrcpp::Any value;
 
-    ReturnControlFlow(const std::any &value);
+    ReturnControlFlow(const antlrcpp::Any &value);
 
     ReturnControlFlow(const ReturnControlFlow &r) = default;
 
@@ -41,17 +41,7 @@ struct Interpreter : public LoxBaseVisitor {
 
     Interpreter();
 
-    void evaluate(const std::vector<LoxParser::StatementContext *> &statements);
-
-    const std::any &evaluate(const LoxParser::ExprContext *expr);
-
-    void execute_block(const std::vector<LoxParser::StatementContext *> &statements,
-                       std::shared_ptr<Environment> &env);
-
     void resolve(const LoxParser::ExprContext *expr, size_t depth);
-
-    antlrcpp::Any visitParens(LoxParser::ParensContext *ctx) override;
-    // void visit(const Grouping &g) override;
 
     antlrcpp::Any visitPrimary(LoxParser::PrimaryContext *ctx) override;
     // void visit(const Literal &l) override;
@@ -91,6 +81,7 @@ struct Interpreter : public LoxBaseVisitor {
     // void visit(const If &f) override;
 
     antlrcpp::Any visitWhileStmt(LoxParser::WhileStmtContext *ctx) override;
+    antlrcpp::Any visitForStmt(LoxParser::ForStmtContext *ctx) override;
     // void visit(const While &w) override;
 
     antlrcpp::Any visitPrintStmt(LoxParser::PrintStmtContext *ctx) override;
@@ -114,17 +105,19 @@ private:
 
     // Check if the type is one of the specified valid types, if not throws an
     // InterpreterError
-    void check_type(const std::any &val,
+    void check_type(const antlrcpp::Any &val,
                     const std::vector<std::type_index> &valid_types,
                     const antlr4::Token *t);
 
     // Check if the two anys have the same type, if not throws an InterpreterError
-    void check_same_type(const std::any &a, const std::any &b, const antlr4::Token *t) const;
+    void check_same_type(const antlrcpp::Any &a,
+                         const antlrcpp::Any &b,
+                         const antlr4::Token *t) const;
 
-    bool is_true(const std::any &x) const;
+    bool is_true(const antlrcpp::Any &x) const;
 
-    bool is_equal(const std::any &a, const std::any &b) const;
+    bool is_equal(const antlrcpp::Any &a, const antlrcpp::Any &b) const;
 
-    std::any lookup_variable(const antlr4::Token *token,
-                             const LoxParser::ExprContext *expr) const;
+    antlrcpp::Any lookup_variable(const antlr4::Token *token,
+                                  const LoxParser::ExprContext *expr) const;
 };
