@@ -120,47 +120,45 @@ antlrcpp::Any Interpreter::visitAddSub(LoxParser::AddSubContext *ctx)
 
 antlrcpp::Any Interpreter::visitComparison(LoxParser::ComparisonContext *ctx)
 {
-    /*
-    std::any left = evaluate(*b.left);
-    std::any right = evaluate(*b.right);
-case TokenType::GREATER:
-    check_same_type(left, right, b.op);
-    check_type(left, {float_id}, b.op);
-    result = std::any_cast<float>(left) > std::any_cast<float>(right);
-    break;
-case TokenType::GREATER_EQUAL:
-    check_same_type(left, right, b.op);
-    check_type(left, {float_id}, b.op);
-    result = std::any_cast<float>(left) >= std::any_cast<float>(right);
-    break;
-case TokenType::LESS:
-    check_same_type(left, right, b.op);
-    check_type(left, {float_id}, b.op);
-    result = std::any_cast<float>(left) < std::any_cast<float>(right);
-    break;
-case TokenType::LESS_EQUAL:
-    check_same_type(left, right, b.op);
-    check_type(left, {float_id}, b.op);
-    result = std::any_cast<float>(left) <= std::any_cast<float>(right);
-    break;
-    */
+    auto lhs = visit(ctx->expr(0));
+    auto rhs = visit(ctx->expr(1));
+    check_same_type(lhs, rhs, ctx->getStart());
+    check_type(lhs, {float_id}, ctx->getStart());
+
+    if (ctx->GREATER()) {
+        return lhs.as<float>() > rhs.as<float>();
+    }
+    if (ctx->GREATER_EQUAL()) {
+        return lhs.as<float>() >= rhs.as<float>();
+    }
+    if (ctx->LESS()) {
+        return lhs.as<float>() < rhs.as<float>();
+    }
+    // Must be <=
+    return lhs.as<float>() <= rhs.as<float>();
 }
 antlrcpp::Any Interpreter::visitEquality(LoxParser::EqualityContext *ctx)
 {
-    /*
-    std::any left = evaluate(*b.left);
-    std::any right = evaluate(*b.right);
-case TokenType::BANG_EQUAL:
-    result = !is_equal(left, right);
-    break;
-case TokenType::EQUAL_EQUAL:
-    result = is_equal(left, right);
-    break;
-    */
+    auto lhs = visit(ctx->expr(0));
+    auto rhs = visit(ctx->expr(1));
+    if (ctx->NOT_EQUAL()) {
+        return !is_equal(lhs, rhs);
+    }
+    // Must be equals comparsion
+    return is_equal(lhs, rhs);
 }
 
 antlrcpp::Any Interpreter::visitCallExpr(LoxParser::CallExprContext *ctx)
 {
+    // We may have a list of call expressions to evaluate from the left to the right
+    // But here we may also have a mix like:
+    // thing().hello(a,b).bye()
+    // If we just iterate through them in order, we lose the ordering of the . vs ()
+    // access
+    // This can be resolved with another visitor that traverses them and builds up
+    // a list in order for the call to flatten it
+
+    
     /*
     void Interpreter::visit(const Call &c)
     {
