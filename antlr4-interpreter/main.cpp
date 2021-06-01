@@ -39,18 +39,6 @@ void run_file(const std::string &file)
         Interpreter interpreter;
         run(input, interpreter);
     } catch (const InterpreterError &e) {
-        /*
-        if (e.token) {
-        // This seems to still crash with the file input stream?
-            std::cout << "[error] at " << e.token->getLine() << ":"
-                      << e.token->getCharPositionInLine() << ": " << e.message << "\n";
-        } else {
-        */
-        std::cout << "[error] " << e.message << "\n";
-        //}
-        std::exit(1);
-    } catch (const std::runtime_error &e) {
-        std::cout << "interpreter error: " << e.what() << "\n";
         std::exit(1);
     }
 }
@@ -65,7 +53,7 @@ void run_prompt()
         try {
             run(input, interpreter);
         } catch (const InterpreterError &e) {
-            std::cout << "[error] " << e.message << "\n";
+            // Prompt doesn't quit on errors, just prints them (in run)
         }
         std::cout << "> ";
     }
@@ -91,5 +79,19 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
     Resolver resolver(interpreter);
     resolver.visit(tree);
 
-    interpreter.visit(tree);
+    try {
+        interpreter.visit(tree);
+    } catch (const InterpreterError &e) {
+        if (e.token) {
+            // This seems to still crash with the file input stream?
+            std::cout << "[error] at " << e.token->getLine() << ":"
+                      << e.token->getCharPositionInLine() << ": " << e.message << "\n";
+        } else {
+            std::cout << "[error] " << e.message << "\n";
+        }
+        throw e;
+    } catch (const std::runtime_error &e) {
+        std::cout << "interpreter error: " << e.what() << "\n";
+        std::exit(1);
+    }
 }
