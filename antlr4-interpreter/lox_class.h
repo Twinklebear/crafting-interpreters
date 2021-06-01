@@ -10,7 +10,7 @@ struct LoxClass : LoxCallable {
 
     LoxClass(const std::string &name);
 
-    size_t arity() const override;
+    size_t arity() override;
 
     antlrcpp::Any call(Interpreter &interpreter, std::vector<antlrcpp::Any> &args) override;
 

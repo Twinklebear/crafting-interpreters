@@ -37,11 +37,10 @@ struct Interpreter : public LoxBaseVisitor {
     // accessible since visit is called by the object itself.
     // Maybe clox introduces a better design here, or just uses raw pointers throughout?
     std::unordered_map<const antlr4::ParserRuleContext *, size_t> locals;
-    std::any result;
 
     Interpreter();
 
-    void resolve(const LoxParser::ExprContext *expr, size_t depth);
+    void resolve(const antlr4::ParserRuleContext *node, size_t depth);
 
     antlrcpp::Any visitPrimary(LoxParser::PrimaryContext *ctx) override;
     // void visit(const Literal &l) override;
@@ -81,13 +80,15 @@ struct Interpreter : public LoxBaseVisitor {
     // void visit(const If &f) override;
 
     antlrcpp::Any visitWhileStmt(LoxParser::WhileStmtContext *ctx) override;
-    antlrcpp::Any visitForStmt(LoxParser::ForStmtContext *ctx) override;
     // void visit(const While &w) override;
+
+    antlrcpp::Any visitForStmt(LoxParser::ForStmtContext *ctx) override;
+    antlrcpp::Any visitForVarDecl(LoxParser::ForVarDeclContext *ctx) override;
 
     antlrcpp::Any visitPrintStmt(LoxParser::PrintStmtContext *ctx) override;
     // void visit(const Print &p) override;
 
-    antlrcpp::Any visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx) override;
+    antlrcpp::Any visitVarDecl(LoxParser::VarDeclContext *ctx) override;
     // void visit(const Var &v) override;
 
     antlrcpp::Any visitFunction(LoxParser::FunctionContext *ctx) override;

@@ -41,7 +41,10 @@ struct Resolver : public LoxBaseVisitor {
     antlrcpp::Any visitBlock(LoxParser::BlockContext *ctx) override;
     // void visit(const Block &b) override;
 
-    antlrcpp::Any visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx) override;
+    antlrcpp::Any visitForStmt(LoxParser::ForStmtContext *ctx) override;
+    antlrcpp::Any visitForVarDecl(LoxParser::ForVarDeclContext *ctx) override;
+
+    antlrcpp::Any visitVarDecl(LoxParser::VarDeclContext *ctx) override;
     // void visit(const Var &v) override;
 
     antlrcpp::Any visitFunction(LoxParser::FunctionContext *ctx) override;

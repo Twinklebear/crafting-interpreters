@@ -40,11 +40,33 @@ antlrcpp::Any Resolver::visitBlock(LoxParser::BlockContext *ctx)
     return antlrcpp::Any();
 }
 
-antlrcpp::Any Resolver::visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx)
+antlrcpp::Any Resolver::visitForStmt(LoxParser::ForStmtContext *ctx)
+{
+    begin_scope();
+    visitChildren(ctx);
+    end_scope();
+    return antlrcpp::Any();
+}
+
+antlrcpp::Any Resolver::visitForVarDecl(LoxParser::ForVarDeclContext *ctx)
 {
     declare(ctx->IDENTIFIER()->getSymbol());
-    std::cout << "vardecl has " << ctx->children.size()
-              << " children (i expect it's 1? or 2?)\n";
+    std::cout << __PRETTY_FUNCTION__ << ": " << ctx->IDENTIFIER()->getText() << "\n";
+    visitChildren(ctx);
+    define(ctx->IDENTIFIER()->getSymbol());
+    return antlrcpp::Any();
+}
+
+antlrcpp::Any Resolver::visitVarDecl(LoxParser::VarDeclContext *ctx)
+{
+    declare(ctx->IDENTIFIER()->getSymbol());
+    // NOTE: The children are all tokens in the expression, both the named
+    // and the plain text tokens
+    std::cout << "vardecl has " << ctx->children.size() << " children: {\n";
+    for (auto *c : ctx->children) {
+        std::cout << "    " << c->toString() << "\n";
+    }
+    std::cout << "}\n";
     visitChildren(ctx);
     define(ctx->IDENTIFIER()->getSymbol());
     return antlrcpp::Any();
@@ -121,10 +143,12 @@ void Resolver::resolve_local(antlr4::ParserRuleContext *node, const antlr4::Toke
         auto fnd = scope.find(name->getText());
         if (fnd != scope.end()) {
             fnd->second.read = true;
+            std::cout << "Variable found at depth " << scopes.size() - 1 - i << "\n";
             interpreter.resolve(node, scopes.size() - 1 - i);
             return;
         }
     }
+    std::cout << "Variable not found in any local scopes\n";
 }
 
 void Resolver::resolve_function(LoxParser::FunctionContext *f, const FunctionType type)

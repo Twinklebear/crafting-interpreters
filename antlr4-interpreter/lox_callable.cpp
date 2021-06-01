@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iostream>
 
-size_t Clock::arity() const
+size_t Clock::arity()
 {
     return 0;
 }
@@ -20,7 +20,7 @@ std::string Clock::to_string() const
     return "<fn clock>";
 }
 
-size_t CITestAdd::arity() const
+size_t CITestAdd::arity()
 {
     return 2;
 }

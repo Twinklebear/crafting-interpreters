@@ -39,7 +39,7 @@ std::string pretty_type_name(const antlrcpp::Any &t)
     if (t.is<float>()) {
         return "float";
     }
-    if (t.is<std::string>()) {
+    if (t.is<StringPtr>()) {
         return "string";
     }
     if (t.is<bool>()) {
@@ -49,4 +49,21 @@ std::string pretty_type_name(const antlrcpp::Any &t)
         return "nil";
     }
     return std::string("UNHANDLED TYPE") + antlrcpp::toString(t);
+}
+
+std::string pretty_type_name(const std::type_info &t)
+{
+    if (t == typeid(float)) {
+        return "float";
+    }
+    if (t == typeid(StringPtr)) {
+        return "string";
+    }
+    if (t == typeid(bool)) {
+        return "bool";
+    }
+    if (t == typeid(void)) {
+        return "nil";
+    }
+    return std::string("UNHANDLED TYPE ") + t.name();
 }

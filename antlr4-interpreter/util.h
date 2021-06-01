@@ -8,14 +8,14 @@
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-extern bool had_error;
+// antlrcpp::Any doesn't properly handle storing std::string types,
+// they have to be wrapped in a pointer
+using StringPtr = std::shared_ptr<std::string>;
 
 std::string get_file_content(const std::string &fname);
-
-void report(int line, const std::string &where, const std::string &msg);
-
-void error(int line, const std::string &msg);
 
 void error(const antlr4::Token *t, const std::string &msg);
 
 std::string pretty_type_name(const antlrcpp::Any &t);
+
+std::string pretty_type_name(const std::type_info &t);

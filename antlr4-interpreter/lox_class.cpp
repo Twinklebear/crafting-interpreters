@@ -2,7 +2,7 @@
 
 LoxClass::LoxClass(const std::string &name) : name(name) {}
 
-size_t LoxClass::arity() const
+size_t LoxClass::arity()
 {
     return 0;
 }

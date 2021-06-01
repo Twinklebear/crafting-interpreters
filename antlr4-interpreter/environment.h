@@ -28,6 +28,8 @@ public:
 
     antlrcpp::Any get_at(const size_t depth, const std::string &name) const;
 
+    void print_vars() const;
+
 private:
     const Environment &ancestor(const size_t depth) const;
 

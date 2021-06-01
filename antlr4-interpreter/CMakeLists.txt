@@ -25,15 +25,11 @@ antlr_target(LoxGrammar Lox.g4
 add_executable(interpreter
     main.cpp
     util.cpp
-    #scanner.cpp
-    #token.cpp
-    #ast_printer.cpp
-    #parser.cpp
-    #interpreter.cpp
-    #environment.cpp
-    #lox_callable.cpp
-    #resolver.cpp
-    #lox_class.cpp
+    interpreter.cpp
+    environment.cpp
+    lox_callable.cpp
+    resolver.cpp
+    lox_class.cpp
     ${ANTLR_LoxGrammar_CXX_OUTPUTS})
 
 target_include_directories(interpreter PUBLIC

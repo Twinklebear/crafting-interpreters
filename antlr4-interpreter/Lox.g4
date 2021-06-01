@@ -35,7 +35,7 @@ whileStmt: 'while' '(' expr ')' statement ;
 
 // Separate names for the possible expressions in the for loop so it's easier to distinguish them
 // Note: statement can also be optional in most languages (C/C++/etc)
-forStmt: 'for' '(' (varDeclStmt | forInit)? ';' forCond? ';' forAdvance? ')' statement ;
+forStmt: 'for' '(' (forVarDecl | forInit)? ';' forCond? ';' forAdvance? ')' statement ;
 
 forInit: expr ;
 
@@ -43,7 +43,7 @@ forCond: expr ;
 
 forAdvance: expr ;
 
-varDeclStmt: 'var' IDENTIFIER ('=' expr)? ;
+forVarDecl: 'var' IDENTIFIER ('=' expr)? ;
 
 printStmt: 'print' expr ';' ;
 

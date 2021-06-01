@@ -13,13 +13,13 @@ ReturnControlFlow::ReturnControlFlow(const antlrcpp::Any &value) : value(value) 
 
 Interpreter::Interpreter()
     : float_id(std::type_index(typeid(float))),
-      string_id(std::type_index(typeid(std::string))),
+      string_id(std::type_index(typeid(StringPtr))),
       bool_id(std::type_index(typeid(bool))),
       nil_id(std::type_index(typeid(void))),
       callable_id(std::type_index(typeid(std::shared_ptr<LoxCallable>)))
 {
     type_names[float_id] = pretty_type_name(typeid(float));
-    type_names[string_id] = pretty_type_name(typeid(std::string));
+    type_names[string_id] = pretty_type_name(typeid(StringPtr));
     type_names[bool_id] = pretty_type_name(typeid(bool));
     type_names[nil_id] = pretty_type_name(typeid(void));
 
@@ -29,9 +29,9 @@ Interpreter::Interpreter()
                     std::shared_ptr<LoxCallable>(std::make_shared<CITestAdd>()));
 }
 
-void Interpreter::resolve(const LoxParser::ExprContext *expr, size_t depth)
+void Interpreter::resolve(const antlr4::ParserRuleContext *node, size_t depth)
 {
-    locals[expr] = depth;
+    locals[node] = depth;
 }
 
 antlrcpp::Any Interpreter::visitPrimary(LoxParser::PrimaryContext *ctx)
@@ -39,6 +39,7 @@ antlrcpp::Any Interpreter::visitPrimary(LoxParser::PrimaryContext *ctx)
     // If we have an identifier it's a variable primary expression, if not
     // it's a literal value
     if (ctx->IDENTIFIER()) {
+        std::cout << "Looking up " << ctx->IDENTIFIER()->getText() << "\n";
         try {
             return lookup_variable(ctx->IDENTIFIER()->getSymbol(), ctx);
         } catch (const std::runtime_error &) {
@@ -47,7 +48,10 @@ antlrcpp::Any Interpreter::visitPrimary(LoxParser::PrimaryContext *ctx)
     } else if (ctx->NUMBER()) {
         return std::stof(ctx->NUMBER()->getText());
     } else if (ctx->STRING()) {
-        return ctx->STRING()->getText();
+        // Remove the opening and closing quotes from the string
+        auto txt = ctx->STRING()->getText();
+        txt = txt.substr(1, txt.length() - 2);
+        return std::make_shared<std::string>(txt);
     } else if (ctx->getText() == "true") {
         return true;
     } else if (ctx->getText() == "false") {
@@ -100,14 +104,18 @@ antlrcpp::Any Interpreter::visitAddSub(LoxParser::AddSubContext *ctx)
 
         if (lhs.is<float>() && rhs.is<float>()) {
             return lhs.as<float>() + rhs.as<float>();
-        } else if (lhs.is<std::string>() && rhs.is<std::string>()) {
-            return lhs.as<std::string>() + rhs.as<std::string>();
+        } else if (lhs.is<StringPtr>() && rhs.is<StringPtr>()) {
+            auto l = *lhs.as<StringPtr>();
+            auto r = *rhs.as<StringPtr>();
+            return std::make_shared<std::string>(l + r);
         } else {
             // We know one is a string and one is a float
             if (lhs.is<float>()) {
-                return std::to_string(lhs.as<float>()) + rhs.as<std::string>();
+                return std::make_shared<std::string>(std::to_string(lhs.as<float>()) +
+                                                     *rhs.as<StringPtr>());
             } else {
-                return lhs.as<std::string>() + std::to_string(rhs.as<float>());
+                return std::make_shared<std::string>(*lhs.as<StringPtr>() +
+                                                     std::to_string(rhs.as<float>()));
             }
         }
     }
@@ -233,6 +241,7 @@ antlrcpp::Any Interpreter::visitLogicAnd(LoxParser::LogicAndContext *ctx)
 
 antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
 {
+    std::cout << __PRETTY_FUNCTION__ << "\n";
     auto val = visit(ctx->expr());
 
     // Setting a struct member
@@ -252,9 +261,11 @@ antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
         try {
             auto fnd = locals.find(ctx);
             if (fnd != locals.end()) {
-                environment->assign_at(fnd->second, ctx->IDENTIFIER()->getText(), result);
+                std::cout << "Assigning local var\n";
+                environment->assign_at(fnd->second, ctx->IDENTIFIER()->getText(), val);
             } else {
-                globals->assign(ctx->IDENTIFIER()->getText(), result);
+                std::cout << "Assigning global var\n";
+                globals->assign(ctx->IDENTIFIER()->getText(), val);
             }
         } catch (const std::runtime_error &) {
             throw InterpreterError(ctx->IDENTIFIER()->getSymbol(), "Undefined variable");
@@ -300,31 +311,54 @@ antlrcpp::Any Interpreter::visitWhileStmt(LoxParser::WhileStmtContext *ctx)
 
 antlrcpp::Any Interpreter::visitForStmt(LoxParser::ForStmtContext *ctx)
 {
-    // Now we do need to treat for separately, b/c we don't have the parser
-    // convert it to a while
-    std::shared_ptr<Environment> env;
+    auto prev = environment;
+    std::shared_ptr<Environment> env = std::make_shared<Environment>(environment);
+    environment = env;
+
     antlr4::tree::ParseTree *forInit = nullptr;
-    if (ctx->varDeclStmt()) {
+    if (ctx->forVarDecl()) {
         // If we declare a loop variable we need a new environment to hold it
-        env = std::make_shared<Environment>(environment);
-        forInit = ctx->varDeclStmt();
+        forInit = ctx->forVarDecl();
     } else {
-        env = environment;
         forInit = ctx->forInit();
     }
 
     // Run the for loop initialization, if there's one
     if (forInit) {
-        visit_with_environment(forInit, env);
+        std::cout << "Running for loop init\n";
+        visit(forInit);
     }
+    environment->print_vars();
 
+    std::cout << "Running for loop\n";
     // Run the for loop
-    while (!ctx->forCond() || is_true(visit_with_environment(ctx->forCond(), env))) {
-        visit_with_environment(ctx->statement(), env);
+    while (!ctx->forCond() || is_true(visit(ctx->forCond()))) {
+        try {
+            visit(ctx->statement());
+        } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
+            environment = prev;
+            throw ret;
+        }
+
         if (ctx->forAdvance()) {
-            visit_with_environment(ctx->forAdvance(), env);
+            visit(ctx->forAdvance());
         }
     }
+    environment = prev;
+    return antlrcpp::Any();
+}
+
+antlrcpp::Any Interpreter::visitForVarDecl(LoxParser::ForVarDeclContext *ctx)
+{
+    // A bit annoying the way the rules are set up result in this repetition,
+    // can probably adjust the grammar to avoid
+    antlrcpp::Any initializer;
+    if (ctx->expr()) {
+        std::cout << "Eval var initializer for " << ctx->IDENTIFIER()->getText() << "\n";
+        initializer = visit(ctx->expr());
+    }
+    std::cout << "Defining var '" << ctx->IDENTIFIER()->getText() << "'\n";
+    environment->define(ctx->IDENTIFIER()->getText(), initializer);
     return antlrcpp::Any();
 }
 
@@ -334,8 +368,8 @@ antlrcpp::Any Interpreter::visitPrintStmt(LoxParser::PrintStmtContext *ctx)
     if (val.isNotNull()) {
         if (val.is<float>()) {
             std::cout << val.as<float>() << "\n";
-        } else if (val.is<std::string>()) {
-            std::cout << val.as<std::string>() << "\n";
+        } else if (val.is<StringPtr>()) {
+            std::cout << *val.as<StringPtr>() << "\n";
         } else if (val.is<bool>()) {
             std::cout << (val.as<bool>() ? "true" : "false") << "\n";
         } else if (val.is<std::shared_ptr<LoxCallable>>()) {
@@ -353,12 +387,14 @@ antlrcpp::Any Interpreter::visitPrintStmt(LoxParser::PrintStmtContext *ctx)
     return antlrcpp::Any();
 }
 
-antlrcpp::Any Interpreter::visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx)
+antlrcpp::Any Interpreter::visitVarDecl(LoxParser::VarDeclContext *ctx)
 {
     antlrcpp::Any initializer;
     if (ctx->expr()) {
+        std::cout << "Eval var initializer for " << ctx->IDENTIFIER()->getText() << "\n";
         initializer = visit(ctx->expr());
     }
+    std::cout << "Defining var '" << ctx->IDENTIFIER()->getText() << "'\n";
     environment->define(ctx->IDENTIFIER()->getText(), initializer);
     return antlrcpp::Any();
 }
@@ -415,7 +451,7 @@ void Interpreter::check_type(const antlrcpp::Any &val,
         if (t == float_id && val.is<float>()) {
             return;
         }
-        if (t == string_id && val.is<std::string>()) {
+        if (t == string_id && val.is<StringPtr>()) {
             return;
         }
         if (t == bool_id && val.is<bool>()) {
@@ -441,8 +477,8 @@ void Interpreter::check_same_type(const antlrcpp::Any &a,
     // compared to the C++17 std::any::type() method
     // Should be a better path to doing this via a separate type checking pass
     const bool type_match = (a.is<float>() && b.is<float>()) ||
-                            (a.is<std::string>() && b.is<std::string>()) ||
-                            (a.is<bool>() && b.is<bool>()) || (a.is<void>() && b.is<void>());
+                            (a.is<StringPtr>() && b.is<StringPtr>()) ||
+                            (a.is<bool>() && b.is<bool>()) || (a.isNull() && b.isNull());
 
     if (!type_match) {
         throw InterpreterError(
@@ -452,7 +488,7 @@ void Interpreter::check_same_type(const antlrcpp::Any &a,
 
 bool Interpreter::is_true(const antlrcpp::Any &x) const
 {
-    if (x.is<void>()) {
+    if (x.isNull()) {
         return false;
     }
     if (x.is<bool>()) {
@@ -469,20 +505,20 @@ bool Interpreter::is_equal(const antlrcpp::Any &a, const antlrcpp::Any &b) const
 {
     // Comparing objects of different types is always false
     const bool type_match = (a.is<float>() && b.is<float>()) ||
-                            (a.is<std::string>() && b.is<std::string>()) ||
-                            (a.is<bool>() && b.is<bool>()) || (a.is<void>() && b.is<void>());
+                            (a.is<StringPtr>() && b.is<StringPtr>()) ||
+                            (a.is<bool>() && b.is<bool>()) || (a.isNull() && b.isNull());
     if (!type_match) {
         return false;
     }
 
-    if (a.is<void>()) {
+    if (a.isNull()) {
         return true;
     }
     if (a.is<float>()) {
         return a.as<float>() == b.as<float>();
     }
-    if (a.is<std::string>()) {
-        return a.as<std::string>() == b.as<std::string>();
+    if (a.is<StringPtr>()) {
+        return *a.as<StringPtr>() == *b.as<StringPtr>();
     }
     return a.as<bool>() == b.as<bool>();
 }
@@ -494,6 +530,7 @@ antlrcpp::Any Interpreter::lookup_variable(const antlr4::Token *token,
     if (fnd != locals.end()) {
         return environment->get_at(fnd->second, token->getText());
     } else {
+        std::cout << "looking in globals for '" << token->getText() << "'\n";
         return globals->get(token->getText());
     }
 }
