@@ -36,7 +36,7 @@ struct Interpreter : public LoxBaseVisitor {
     // with how the visitor pattern works here the shared ptr is not directly
     // accessible since visit is called by the object itself.
     // Maybe clox introduces a better design here, or just uses raw pointers throughout?
-    std::unordered_map<const LoxParser::ExprContext *, size_t> locals;
+    std::unordered_map<const antlr4::ParserRuleContext *, size_t> locals;
     std::any result;
 
     Interpreter();
@@ -99,6 +99,9 @@ struct Interpreter : public LoxBaseVisitor {
     antlrcpp::Any visitClassDecl(LoxParser::ClassDeclContext *ctx) override;
     // void visit(const Class &c) override;
 
+    antlrcpp::Any visit_with_environment(antlr4::tree::ParseTree *tree,
+                                         std::shared_ptr<Environment> &env);
+
 private:
     std::type_index float_id, string_id, bool_id, nil_id, callable_id;
     std::unordered_map<std::type_index, std::string> type_names;
@@ -119,5 +122,5 @@ private:
     bool is_equal(const antlrcpp::Any &a, const antlrcpp::Any &b) const;
 
     antlrcpp::Any lookup_variable(const antlr4::Token *token,
-                                  const LoxParser::ExprContext *expr) const;
+                                  const antlr4::ParserRuleContext *node) const;
 };

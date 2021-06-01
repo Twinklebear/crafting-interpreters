@@ -60,7 +60,7 @@ private:
     void declare(const antlr4::Token *name);
     void define(const antlr4::Token *name);
 
-    void resolve_local(LoxParser::ExprContext *expr, const antlr4::Token *name);
+    void resolve_local(antlr4::ParserRuleContext *node, const antlr4::Token *name);
 
     void resolve_function(LoxParser::FunctionContext *f, const FunctionType type);
 };

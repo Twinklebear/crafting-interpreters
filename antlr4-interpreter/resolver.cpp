@@ -111,7 +111,7 @@ void Resolver::define(const antlr4::Token *name)
     scope[name->getText()].defined = true;
 }
 
-void Resolver::resolve_local(LoxParser::ExprContext *expr, const antlr4::Token *name)
+void Resolver::resolve_local(antlr4::ParserRuleContext *node, const antlr4::Token *name)
 {
     std::cout << "At: " << name->getLine() << ":" << name->getCharPositionInLine()
               << ": Resolving " << name->getText() << "\n";
@@ -121,7 +121,7 @@ void Resolver::resolve_local(LoxParser::ExprContext *expr, const antlr4::Token *
         auto fnd = scope.find(name->getText());
         if (fnd != scope.end()) {
             fnd->second.read = true;
-            interpreter.resolve(expr, scopes.size() - 1 - i);
+            interpreter.resolve(node, scopes.size() - 1 - i);
             return;
         }
     }

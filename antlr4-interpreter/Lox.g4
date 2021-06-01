@@ -33,7 +33,15 @@ ifStmt: 'if' '(' expr ')' statement ('else' statement)? ;
 
 whileStmt: 'while' '(' expr ')' statement ;
 
-forStmt: 'for' '(' (varDeclStmt | expr)? ';' expr? ';' expr? ')' statement ;
+// Separate names for the possible expressions in the for loop so it's easier to distinguish them
+// Note: statement can also be optional in most languages (C/C++/etc)
+forStmt: 'for' '(' (varDeclStmt | forInit)? ';' forCond? ';' forAdvance? ')' statement ;
+
+forInit: expr ;
+
+forCond: expr ;
+
+forAdvance: expr ;
 
 varDeclStmt: 'var' IDENTIFIER ('=' expr)? ;
 
@@ -86,7 +94,7 @@ expr: (MINUS | BANG) expr               # Unary
     | (IDENTIFIER | NUMBER | STRING |  'true' | 'false' | 'nil') # Primary
     ;
 
-callExpr: IDENTIFIER ( '(' arguments? ')' | '.' IDENTIFIER )* ;
+callExpr: IDENTIFIER ( '(' arguments? ')' | '.' IDENTIFIER )+ ;
 
 arguments: expr (',' expr)* ; 
 

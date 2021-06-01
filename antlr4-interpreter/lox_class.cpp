@@ -7,7 +7,7 @@ size_t LoxClass::arity() const
     return 0;
 }
 
-std::any LoxClass::call(Interpreter &interpreter, std::vector<std::any> &args)
+antlrcpp::Any LoxClass::call(Interpreter &interpreter, std::vector<antlrcpp::Any> &args)
 {
     return std::make_shared<LoxInstance>(*this);
 }
@@ -24,16 +24,16 @@ std::string LoxInstance::to_string() const
     return lox_class.name + " instance";
 }
 
-std::any LoxInstance::get(const Token &name)
+antlrcpp::Any LoxInstance::get(const antlr4::Token *name)
 {
-    auto fnd = fields.find(name.lexeme);
+    auto fnd = fields.find(name->getText());
     if (fnd != fields.end()) {
         return fnd->second;
     }
-    throw InterpreterError(name, "Undefined property '" + name.lexeme + "'");
+    throw InterpreterError(name, "Undefined property '" + name->getText() + "'");
 }
 
-void LoxInstance::set(const Token &name, const std::any &value)
+void LoxInstance::set(const antlr4::Token *name, const antlrcpp::Any &value)
 {
-    fields[name.lexeme] = value;
+    fields[name->getText()] = value;
 }

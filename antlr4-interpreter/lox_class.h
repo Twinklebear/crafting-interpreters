@@ -2,7 +2,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "antlr4-common.h"
+#include "antlr4-runtime.h"
 #include "lox_callable.h"
 
 struct LoxClass : LoxCallable {
@@ -12,20 +12,20 @@ struct LoxClass : LoxCallable {
 
     size_t arity() const override;
 
-    std::any call(Interpreter &interpreter, std::vector<std::any> &args) override;
+    antlrcpp::Any call(Interpreter &interpreter, std::vector<antlrcpp::Any> &args) override;
 
     std::string to_string() const override;
 };
 
 struct LoxInstance {
     const LoxClass &lox_class;
-    std::unordered_map<std::string, std::any> fields;
+    std::unordered_map<std::string, antlrcpp::Any> fields;
 
     LoxInstance(const LoxClass &lox_class);
 
     std::string to_string() const;
 
-    std::any get(const antlr4::Token *name);
+    antlrcpp::Any get(const antlr4::Token *name);
 
-    void set(const antlr4::Token *name, const std::any &value);
+    void set(const antlr4::Token *name, const antlrcpp::Any &value);
 };

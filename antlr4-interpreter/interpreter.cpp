@@ -157,275 +157,254 @@ antlrcpp::Any Interpreter::visitCallExpr(LoxParser::CallExprContext *ctx)
     // access
     // This can be resolved with another visitor that traverses them and builds up
     // a list in order for the call to flatten it
+    // NOTE: might also need to be careful that we don't reprocess the left most
+    // side of the identifier/etc. list since that's the function/object
+    // we're initially calling. Or maybe it's fine actually, and just
+    // build up a list and we pair things up iterating through it after
+    // flattening it down with the visitor.
+    // Or maybe it doesn't even need a new visitor and I can just iterate
+    // through the ctx->children list and check what I've got.
+    // Note: the current interpreter I also don't think supports some kind of
+    // chained call operation so it's not a big deal at the moment.
 
-    
-    /*
-    void Interpreter::visit(const Call &c)
-    {
-        auto callee = evaluate(*c.callee);
-        std::vector<std::any> args;
-        for (const auto &e : c.args) {
-            args.push_back(evaluate(*e));
-        }
+    // Evaluate the sequence of function calls and struct member accesses from left to right in
+    // a chain. Subsequent calls are applied to the result of the previous expression.
+    antlrcpp::Any result = lookup_variable(ctx->IDENTIFIER(0)->getSymbol(), ctx);
+    for (size_t i = 1; i < ctx->children.size(); ++i) {
+        auto args_ctx = dynamic_cast<LoxParser::ArgumentsContext *>(ctx->children[i]);
+        // Passing arguments to the function call
+        if (args_ctx) {
+            std::shared_ptr<LoxCallable> fcn;
+            if (result.is<std::shared_ptr<LoxCallable>>()) {
+                fcn = std::any_cast<std::shared_ptr<LoxCallable>>(result);
+            } else if (result.is<std::shared_ptr<LoxClass>>()) {
+                fcn = std::dynamic_pointer_cast<LoxCallable>(
+                    std::any_cast<std::shared_ptr<LoxClass>>(result));
+            } else {
+                throw InterpreterError(args_ctx->getStart(),
+                                       "Only functions and classes are callable");
+            }
 
-        std::shared_ptr<LoxCallable> fcn;
-        if (callee.type() == typeid(std::shared_ptr<LoxCallable>)) {
-            fcn = std::any_cast<std::shared_ptr<LoxCallable>>(callee);
-        } else if (callee.type() == typeid(std::shared_ptr<LoxClass>)) {
-            fcn = std::dynamic_pointer_cast<LoxCallable>(
-                std::any_cast<std::shared_ptr<LoxClass>>(callee));
+            // Evaluate the set of expression arguments to pass to the function
+            std::vector<antlrcpp::Any> args;
+            for (auto &a : args_ctx->children) {
+                args.push_back(visit(a));
+            }
+
+            if (args.size() != fcn->arity()) {
+                throw InterpreterError(args_ctx->getStart(),
+                                       "Expected " + std::to_string(fcn->arity()) +
+                                           " arguments but got " +
+                                           std::to_string(args.size()));
+            }
+            result = fcn->call(*this, args);
         } else {
-            throw InterpreterError(c.paren, "Only functions and classes are callable");
+            // Accessing a struct member
+            auto ident = dynamic_cast<antlr4::tree::TerminalNode *>(ctx->children[i]);
+            if (result.is<std::shared_ptr<LoxInstance>>()) {
+                result = result.as<std::shared_ptr<LoxInstance>>()->get(ident->getSymbol());
+            } else {
+                throw InterpreterError(
+                    ident->getSymbol(),
+                    "Attempt to get struct member on variable which is not a struct instance");
+            }
         }
-
-        if (args.size() != fcn->arity()) {
-            throw InterpreterError(c.paren,
-                                   "Expected " + std::to_string(fcn->arity()) +
-                                       " arguments but got " + std::to_string(args.size()));
-        }
-        result = fcn->call(*this, args);
     }
-    */
+    return result;
 }
 
 antlrcpp::Any Interpreter::visitLogicOr(LoxParser::LogicOrContext *ctx)
 {
-    /*
-    // This would be visit
-    result = evaluate(*l.left);
-
-    if (l.op.type == TokenType::OR) {
-        if (is_true(result)) {
-            return true;
-        }
+    auto result = visit(ctx->children[0]);
+    if (is_true(result)) {
+        return true;
     }
-
-    // This would be visit
-    result = evaluate(*l.right);
-    */
+    return is_true(visit(ctx->children[1]));
 }
 
 antlrcpp::Any Interpreter::visitLogicAnd(LoxParser::LogicAndContext *ctx)
 {
-    /*
-    // This would be visit
-    result = evaluate(*l.left);
-
-    if (l.op.type == TokenType::OR) {
-        if (is_true(result)) {
-            return;
-        }
-    } else if (!is_true(result)) {
-        return;
+    auto result = visit(ctx->children[0]);
+    if (!is_true(result)) {
+        return false;
     }
-
-    // This would be visit
-    result = evaluate(*l.right);
-    return result;
-    */
+    return is_true(visit(ctx->children[1]));
 }
 
 antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
 {
-    /*
+    auto val = visit(ctx->expr());
 
-void Interpreter::visit(const Assign &a)
-{
-result = evaluate(*a.value);
-try {
-    auto fnd = locals.find(&a);
-    if (fnd != locals.end()) {
-        environment->assign_at(fnd->second, a.name.lexeme, result);
+    // Setting a struct member
+    if (ctx->callExpr()) {
+        auto call_res = visit(ctx->callExpr());
+
+        if (call_res.is<std::shared_ptr<LoxInstance>>()) {
+            auto inst = call_res.as<std::shared_ptr<LoxInstance>>();
+            inst->set(ctx->IDENTIFIER()->getSymbol(), val);
+        } else {
+            throw InterpreterError(
+                ctx->IDENTIFIER()->getSymbol(),
+                "Attempt to set struct member on variable which is not a struct instance");
+        }
     } else {
-        globals->assign(a.name.lexeme, result);
-    }
-} catch (const std::runtime_error &) {
-    throw InterpreterError(a.name, "Undefined variable");
-}
-}
-
-void Interpreter::visit(const Get &g)
-{
-auto obj = evaluate(*g.object);
-if (obj.type() == typeid(std::shared_ptr<LoxInstance>)) {
-    auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
-    result = inst->get(g.name);
-}
-}
-*/
-    /*
-    void Interpreter::visit(const Set &s)
-    {
-        auto obj = evaluate(*s.object);
+        // Setting a regular variable
         try {
-            auto inst = std::any_cast<std::shared_ptr<LoxInstance>>(obj);
-            auto value = evaluate(*s.value);
-            inst->set(s.name, value);
-            result = value;
-        } catch (const std::bad_any_cast &e) {
-            throw InterpreterError(s.name, "Only instances have fields");
+            auto fnd = locals.find(ctx);
+            if (fnd != locals.end()) {
+                environment->assign_at(fnd->second, ctx->IDENTIFIER()->getText(), result);
+            } else {
+                globals->assign(ctx->IDENTIFIER()->getText(), result);
+            }
+        } catch (const std::runtime_error &) {
+            throw InterpreterError(ctx->IDENTIFIER()->getSymbol(), "Undefined variable");
         }
     }
-    */
+    return antlrcpp::Any();
 }
 
-antlrcpp::Any visitBlock(LoxParser::BlockContext *ctx)
+antlrcpp::Any Interpreter::visitBlock(LoxParser::BlockContext *ctx)
 {
-    /*
-    void Interpreter::visit(const Block &b)
-    {
-        auto env = std::make_shared<Environment>(environment);
-        execute_block(b.statements, env);
-
-        auto prev = environment;
-        environment = env;
-        try {
-            evaluate(statements);
-        } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
-            // Need to restore environments as we return out
-            // TODO: Same would apply for break
-            // TODO: Needs a better way to handle the environments with the call stack
-            environment = prev;
-            throw ret;
-        }
-        environment = prev;
-
-        result = std::any();
+    // Not the most efficient here as we push/pop the env environment many times
+    // (once per call to visit_with_environment), but should behave properly
+    auto env = std::make_shared<Environment>(environment);
+    for (auto *d : ctx->declaration()) {
+        visit_with_environment(d, env);
     }
-    */
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitExprStmt(LoxParser::ExprStmtContext *ctx)
 {
-    // we do want to override b/c expressions shouldn't return a value
-    /*
-void Interpreter::visit(const Expression &e)
-{
-    evaluate(*e.expr);
-    result = std::any();
-}
-*/
+    visit(ctx->expr());
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitIfStmt(LoxParser::IfStmtContext *ctx)
 {
-    /*
-void Interpreter::visit(const If &f)
-{
-    if (is_true(evaluate(*f.condition))) {
-        evaluate({f.then_branch});
-    } else if (f.else_branch) {
-        evaluate({f.else_branch});
+    if (is_true(visit(ctx->expr()))) {
+        visit(ctx->statement(0));
+    } else if (ctx->statement().size() > 1) {
+        visit(ctx->statement(1));
     }
-    result = std::any();
-}
-*/
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitWhileStmt(LoxParser::WhileStmtContext *ctx)
 {
-    /*
-void Interpreter::visit(const While &w)
-{
-    while (is_true(evaluate(*w.condition))) {
-        evaluate({w.body});
+    while (is_true(visit(ctx->expr()))) {
+        visit(ctx->statement());
     }
-    result = std::any();
-}
-*/
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitForStmt(LoxParser::ForStmtContext *ctx)
 {
     // Now we do need to treat for separately, b/c we don't have the parser
     // convert it to a while
+    std::shared_ptr<Environment> env;
+    antlr4::tree::ParseTree *forInit = nullptr;
+    if (ctx->varDeclStmt()) {
+        // If we declare a loop variable we need a new environment to hold it
+        env = std::make_shared<Environment>(environment);
+        forInit = ctx->varDeclStmt();
+    } else {
+        env = environment;
+        forInit = ctx->forInit();
+    }
+
+    // Run the for loop initialization, if there's one
+    if (forInit) {
+        visit_with_environment(forInit, env);
+    }
+
+    // Run the for loop
+    while (!ctx->forCond() || is_true(visit_with_environment(ctx->forCond(), env))) {
+        visit_with_environment(ctx->statement(), env);
+        if (ctx->forAdvance()) {
+            visit_with_environment(ctx->forAdvance(), env);
+        }
+    }
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitPrintStmt(LoxParser::PrintStmtContext *ctx)
 {
-    /*
-void Interpreter::visit(const Print &p)
-{
-    std::any val = evaluate(*p.expr);
-    if (val.has_value()) {
-        if (val.type() == typeid(float)) {
-            std::cout << std::any_cast<float>(val) << "\n";
-        } else if (val.type() == typeid(std::string)) {
-            std::cout << std::any_cast<std::string>(val) << "\n";
-        } else if (val.type() == typeid(bool)) {
-            std::cout << (std::any_cast<bool>(val) ? "true" : "false") << "\n";
-        } else if (val.type() == typeid(std::shared_ptr<LoxCallable>)) {
-            std::cout << std::any_cast<std::shared_ptr<LoxCallable>>(val)->to_string() << "\n";
-        } else if (val.type() == typeid(std::shared_ptr<LoxClass>)) {
-            std::cout << std::any_cast<std::shared_ptr<LoxClass>>(val)->to_string() << "\n";
-        } else if (val.type() == typeid(std::shared_ptr<LoxInstance>)) {
-            std::cout << std::any_cast<std::shared_ptr<LoxInstance>>(val)->to_string() << "\n";
+    auto val = visit(ctx->expr());
+    if (val.isNotNull()) {
+        if (val.is<float>()) {
+            std::cout << val.as<float>() << "\n";
+        } else if (val.is<std::string>()) {
+            std::cout << val.as<std::string>() << "\n";
+        } else if (val.is<bool>()) {
+            std::cout << (val.as<bool>() ? "true" : "false") << "\n";
+        } else if (val.is<std::shared_ptr<LoxCallable>>()) {
+            std::cout << val.as<std::shared_ptr<LoxCallable>>()->to_string() << "\n";
+        } else if (val.is<std::shared_ptr<LoxClass>>()) {
+            std::cout << val.as<std::shared_ptr<LoxClass>>()->to_string() << "\n";
+        } else if (val.is<std::shared_ptr<LoxInstance>>()) {
+            std::cout << val.as<std::shared_ptr<LoxInstance>>()->to_string() << "\n";
         } else {
-            std::cout << "[error]: Unsupported val type!?\n";
+            std::cout << "[error]: Print unsupported value type!?\n";
         }
     } else {
-        std::cout << "nil";
+        std::cout << "nil\n";
     }
-    result = std::any();
-}
-*/
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx)
 {
-    /*
-void Interpreter::visit(const Var &v)
-{
-    std::any initializer;
-    if (v.initializer) {
-        initializer = evaluate(*v.initializer);
+    antlrcpp::Any initializer;
+    if (ctx->expr()) {
+        initializer = visit(ctx->expr());
     }
-
-    environment->define(v.token.lexeme, initializer);
-
-    result = std::any();
-}
-*/
+    environment->define(ctx->IDENTIFIER()->getText(), initializer);
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitFunction(LoxParser::FunctionContext *ctx)
 {
-    /*
-void Interpreter::visit(const Function &f)
-{
     // Now we will create and add a callable to the globals
-    environment->define(
-        f.name.lexeme,
-        std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(f, environment)));
-    result = std::any();
-}
-*/
+    auto fn = std::shared_ptr<LoxCallable>(std::make_shared<LoxFunction>(ctx, environment));
+    environment->define(ctx->IDENTIFIER()->getText(), fn);
+    return antlrcpp::Any();
 }
 
 antlrcpp::Any Interpreter::visitReturnStmt(LoxParser::ReturnStmtContext *ctx)
 {
-    /*
-void Interpreter::visit(const Return &r)
-{
-    std::any return_result;
-    if (r.value) {
-        return_result = evaluate(*r.value);
+    antlrcpp::Any return_result;
+    if (ctx->expr()) {
+        return_result = visit(ctx->expr());
     }
     throw std::make_shared<ReturnControlFlow>(return_result);
-}
-*/
 }
 
 antlrcpp::Any Interpreter::visitClassDecl(LoxParser::ClassDeclContext *ctx)
 {
-    /*
-void Interpreter::visit(const Class &c)
-{
-    environment->define(c.name.lexeme, std::any());
-    auto lox_class = std::make_shared<LoxClass>(c.name.lexeme);
-    environment->assign(c.name.lexeme, lox_class);
+    const std::string class_name = ctx->IDENTIFIER()->getText();
+    environment->define(class_name, antlrcpp::Any());
+    auto lox_class = std::make_shared<LoxClass>(class_name);
+    environment->assign(class_name, lox_class);
+
+    return antlrcpp::Any();
 }
-*/
+
+antlrcpp::Any Interpreter::visit_with_environment(antlr4::tree::ParseTree *tree,
+                                                  std::shared_ptr<Environment> &env)
+{
+    auto prev = environment;
+    environment = env;
+    try {
+        return visit(tree);
+    } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
+        // Need to restore environments as we return out
+        // TODO: Same would apply for break
+        // TODO: Needs a better way to handle the environments with the call stack
+        environment = prev;
+        throw ret;
+    }
+    environment = prev;
 }
 
 void Interpreter::check_type(const antlrcpp::Any &val,
@@ -509,9 +488,9 @@ bool Interpreter::is_equal(const antlrcpp::Any &a, const antlrcpp::Any &b) const
 }
 
 antlrcpp::Any Interpreter::lookup_variable(const antlr4::Token *token,
-                                           const LoxParser::ExprContext *expr) const
+                                           const antlr4::ParserRuleContext *node) const
 {
-    auto fnd = locals.find(expr);
+    auto fnd = locals.find(node);
     if (fnd != locals.end()) {
         return environment->get_at(fnd->second, token->getText());
     } else {
