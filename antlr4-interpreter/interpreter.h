@@ -83,7 +83,6 @@ struct Interpreter : public LoxBaseVisitor {
     // void visit(const While &w) override;
 
     antlrcpp::Any visitForStmt(LoxParser::ForStmtContext *ctx) override;
-    antlrcpp::Any visitForVarDecl(LoxParser::ForVarDeclContext *ctx) override;
 
     antlrcpp::Any visitPrintStmt(LoxParser::PrintStmtContext *ctx) override;
     // void visit(const Print &p) override;
@@ -100,8 +99,6 @@ struct Interpreter : public LoxBaseVisitor {
     antlrcpp::Any visitClassDecl(LoxParser::ClassDeclContext *ctx) override;
     // void visit(const Class &c) override;
 
-    antlrcpp::Any visit_with_environment(antlr4::tree::ParseTree *tree,
-                                         std::shared_ptr<Environment> &env);
 
 private:
     std::type_index float_id, string_id, bool_id, nil_id, callable_id;

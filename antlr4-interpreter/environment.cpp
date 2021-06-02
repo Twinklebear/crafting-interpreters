@@ -84,3 +84,15 @@ Environment &Environment::ancestor(const size_t depth)
     }
     return *next;
 }
+
+EnvironmentContext::EnvironmentContext(std::shared_ptr<Environment> *current,
+                                       std::shared_ptr<Environment> push)
+    : prev(*current), current(current)
+{
+    *current = push;
+}
+
+EnvironmentContext::~EnvironmentContext()
+{
+    *current = prev;
+}

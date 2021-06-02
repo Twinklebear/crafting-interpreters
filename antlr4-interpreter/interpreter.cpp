@@ -39,7 +39,6 @@ antlrcpp::Any Interpreter::visitPrimary(LoxParser::PrimaryContext *ctx)
     // If we have an identifier it's a variable primary expression, if not
     // it's a literal value
     if (ctx->IDENTIFIER()) {
-        std::cout << "Looking up " << ctx->IDENTIFIER()->getText() << "\n";
         try {
             return lookup_variable(ctx->IDENTIFIER()->getSymbol(), ctx);
         } catch (const std::runtime_error &) {
@@ -105,9 +104,9 @@ antlrcpp::Any Interpreter::visitAddSub(LoxParser::AddSubContext *ctx)
         if (lhs.is<float>() && rhs.is<float>()) {
             return lhs.as<float>() + rhs.as<float>();
         } else if (lhs.is<StringPtr>() && rhs.is<StringPtr>()) {
-            auto l = *lhs.as<StringPtr>();
-            auto r = *rhs.as<StringPtr>();
-            return std::make_shared<std::string>(l + r);
+            auto l = lhs.as<StringPtr>();
+            auto r = rhs.as<StringPtr>();
+            return std::make_shared<std::string>(*l + *r);
         } else {
             // We know one is a string and one is a float
             if (lhs.is<float>()) {
@@ -179,24 +178,30 @@ antlrcpp::Any Interpreter::visitCallExpr(LoxParser::CallExprContext *ctx)
     // a chain. Subsequent calls are applied to the result of the previous expression.
     antlrcpp::Any result = lookup_variable(ctx->IDENTIFIER(0)->getSymbol(), ctx);
     for (size_t i = 1; i < ctx->children.size(); ++i) {
-        auto args_ctx = dynamic_cast<LoxParser::ArgumentsContext *>(ctx->children[i]);
+        std::cout << "Call ctx child[" << i << "] = " << ctx->children[i]->toString() << "\n";
         // Passing arguments to the function call
-        if (args_ctx) {
+        if (ctx->children[i]->getText() == "(") {
             std::shared_ptr<LoxCallable> fcn;
             if (result.is<std::shared_ptr<LoxCallable>>()) {
-                fcn = std::any_cast<std::shared_ptr<LoxCallable>>(result);
+                fcn = result.as<std::shared_ptr<LoxCallable>>();
             } else if (result.is<std::shared_ptr<LoxClass>>()) {
                 fcn = std::dynamic_pointer_cast<LoxCallable>(
-                    std::any_cast<std::shared_ptr<LoxClass>>(result));
+                    result.as<std::shared_ptr<LoxClass>>());
             } else {
-                throw InterpreterError(args_ctx->getStart(),
+                throw InterpreterError(ctx->getStart(),
                                        "Only functions and classes are callable");
             }
 
             // Evaluate the set of expression arguments to pass to the function
+            auto args_ctx = dynamic_cast<LoxParser::ArgumentsContext *>(ctx->children[++i]);
             std::vector<antlrcpp::Any> args;
-            for (auto &a : args_ctx->children) {
-                args.push_back(visit(a));
+            if (args_ctx) {
+                for (auto &a : args_ctx->children) {
+                    if (a->getText() == ",") {
+                        continue;
+                    }
+                    args.push_back(visit(a));
+                }
             }
 
             if (args.size() != fcn->arity()) {
@@ -206,9 +211,12 @@ antlrcpp::Any Interpreter::visitCallExpr(LoxParser::CallExprContext *ctx)
                                            std::to_string(args.size()));
             }
             result = fcn->call(*this, args);
+
+            // Advance to the closing parenthesis
+            ++i;
         } else {
             // Accessing a struct member
-            auto ident = dynamic_cast<antlr4::tree::TerminalNode *>(ctx->children[i]);
+            auto ident = dynamic_cast<antlr4::tree::TerminalNode *>(ctx->children[++i]);
             if (result.is<std::shared_ptr<LoxInstance>>()) {
                 result = result.as<std::shared_ptr<LoxInstance>>()->get(ident->getSymbol());
             } else {
@@ -241,7 +249,6 @@ antlrcpp::Any Interpreter::visitLogicAnd(LoxParser::LogicAndContext *ctx)
 
 antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
 {
-    std::cout << __PRETTY_FUNCTION__ << "\n";
     auto val = visit(ctx->expr());
 
     // Setting a struct member
@@ -261,7 +268,8 @@ antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
         try {
             auto fnd = locals.find(ctx);
             if (fnd != locals.end()) {
-                std::cout << "Assigning local var\n";
+                std::cout << "Assigning local var " << ctx->IDENTIFIER()->getText()
+                          << " at depth " << fnd->second << "\n";
                 environment->assign_at(fnd->second, ctx->IDENTIFIER()->getText(), val);
             } else {
                 std::cout << "Assigning global var\n";
@@ -276,11 +284,9 @@ antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
 
 antlrcpp::Any Interpreter::visitBlock(LoxParser::BlockContext *ctx)
 {
-    // Not the most efficient here as we push/pop the env environment many times
-    // (once per call to visit_with_environment), but should behave properly
-    auto env = std::make_shared<Environment>(environment);
+    EnvironmentContext env_ctx(&environment, std::make_shared<Environment>(environment));
     for (auto *d : ctx->declaration()) {
-        visit_with_environment(d, env);
+        visit(d);
     }
     return antlrcpp::Any();
 }
@@ -311,22 +317,20 @@ antlrcpp::Any Interpreter::visitWhileStmt(LoxParser::WhileStmtContext *ctx)
 
 antlrcpp::Any Interpreter::visitForStmt(LoxParser::ForStmtContext *ctx)
 {
-    auto prev = environment;
-    std::shared_ptr<Environment> env = std::make_shared<Environment>(environment);
-    environment = env;
+    EnvironmentContext env_context(&environment, std::make_shared<Environment>(environment));
 
-    antlr4::tree::ParseTree *forInit = nullptr;
-    if (ctx->forVarDecl()) {
+    antlr4::tree::ParseTree *for_init = nullptr;
+    if (ctx->varDecl()) {
         // If we declare a loop variable we need a new environment to hold it
-        forInit = ctx->forVarDecl();
+        for_init = ctx->varDecl();
     } else {
-        forInit = ctx->forInit();
+        for_init = ctx->forInit();
     }
 
     // Run the for loop initialization, if there's one
-    if (forInit) {
+    if (for_init) {
         std::cout << "Running for loop init\n";
-        visit(forInit);
+        visit(for_init);
     }
     environment->print_vars();
 
@@ -336,29 +340,15 @@ antlrcpp::Any Interpreter::visitForStmt(LoxParser::ForStmtContext *ctx)
         try {
             visit(ctx->statement());
         } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
-            environment = prev;
             throw ret;
         }
 
         if (ctx->forAdvance()) {
+            std::cout << __PRETTY_FUNCTION__ << "\n";
             visit(ctx->forAdvance());
+            std::cout << __PRETTY_FUNCTION__ << "\n";
         }
     }
-    environment = prev;
-    return antlrcpp::Any();
-}
-
-antlrcpp::Any Interpreter::visitForVarDecl(LoxParser::ForVarDeclContext *ctx)
-{
-    // A bit annoying the way the rules are set up result in this repetition,
-    // can probably adjust the grammar to avoid
-    antlrcpp::Any initializer;
-    if (ctx->expr()) {
-        std::cout << "Eval var initializer for " << ctx->IDENTIFIER()->getText() << "\n";
-        initializer = visit(ctx->expr());
-    }
-    std::cout << "Defining var '" << ctx->IDENTIFIER()->getText() << "'\n";
-    environment->define(ctx->IDENTIFIER()->getText(), initializer);
     return antlrcpp::Any();
 }
 
@@ -424,23 +414,6 @@ antlrcpp::Any Interpreter::visitClassDecl(LoxParser::ClassDeclContext *ctx)
     environment->assign(class_name, lox_class);
 
     return antlrcpp::Any();
-}
-
-antlrcpp::Any Interpreter::visit_with_environment(antlr4::tree::ParseTree *tree,
-                                                  std::shared_ptr<Environment> &env)
-{
-    auto prev = environment;
-    environment = env;
-    try {
-        return visit(tree);
-    } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
-        // Need to restore environments as we return out
-        // TODO: Same would apply for break
-        // TODO: Needs a better way to handle the environments with the call stack
-        environment = prev;
-        throw ret;
-    }
-    environment = prev;
 }
 
 void Interpreter::check_type(const antlrcpp::Any &val,
@@ -528,6 +501,8 @@ antlrcpp::Any Interpreter::lookup_variable(const antlr4::Token *token,
 {
     auto fnd = locals.find(node);
     if (fnd != locals.end()) {
+        std::cout << "Lookup local var " << token->getText() << " at depth " << fnd->second
+                  << "\n";
         return environment->get_at(fnd->second, token->getText());
     } else {
         std::cout << "looking in globals for '" << token->getText() << "'\n";

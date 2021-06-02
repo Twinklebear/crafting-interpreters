@@ -48,21 +48,15 @@ antlrcpp::Any Resolver::visitForStmt(LoxParser::ForStmtContext *ctx)
     return antlrcpp::Any();
 }
 
-antlrcpp::Any Resolver::visitForVarDecl(LoxParser::ForVarDeclContext *ctx)
-{
-    declare(ctx->IDENTIFIER()->getSymbol());
-    std::cout << __PRETTY_FUNCTION__ << ": " << ctx->IDENTIFIER()->getText() << "\n";
-    visitChildren(ctx);
-    define(ctx->IDENTIFIER()->getSymbol());
-    return antlrcpp::Any();
-}
-
 antlrcpp::Any Resolver::visitVarDecl(LoxParser::VarDeclContext *ctx)
 {
     declare(ctx->IDENTIFIER()->getSymbol());
     // NOTE: The children are all tokens in the expression, both the named
     // and the plain text tokens
-    std::cout << "vardecl has " << ctx->children.size() << " children: {\n";
+    std::cout << "At: " << ctx->IDENTIFIER()->getSymbol()->getLine() << ":"
+              << ctx->IDENTIFIER()->getSymbol()->getCharPositionInLine() << ", vardecl of "
+              << ctx->IDENTIFIER()->getText() << " has " << ctx->children.size()
+              << " children: {\n";
     for (auto *c : ctx->children) {
         std::cout << "    " << c->toString() << "\n";
     }
@@ -113,9 +107,13 @@ void Resolver::end_scope()
 
 void Resolver::declare(const antlr4::Token *name)
 {
+    std::cout << "At: " << name->getLine() << ":" << name->getCharPositionInLine()
+              << ": Declaring " << name->getText() << "\n";
     if (scopes.empty()) {
+        std::cout << "empty scopes\n";
         return;
     }
+
     auto &scope = scopes.back();
     auto fnd = scope.find(name->getText());
     if (fnd != scope.end()) {

@@ -1,6 +1,7 @@
 #include "lox_callable.h"
 #include <chrono>
 #include <iostream>
+#include "util.h"
 
 size_t Clock::arity()
 {
@@ -32,11 +33,13 @@ antlrcpp::Any CITestAdd::call(Interpreter &, std::vector<antlrcpp::Any> &args)
     antlrcpp::Any result;
     if (left.is<float>() && right.is<float>()) {
         result = left.as<float>() + right.as<float>();
-    } else if (left.is<std::string>() && right.is<std::string>()) {
-        result = left.as<std::string>() + right.as<std::string>();
+    } else if (left.is<StringPtr>() && right.is<StringPtr>()) {
+        auto l = left.as<StringPtr>();
+        auto r = right.as<StringPtr>();
+        result = std::make_shared<std::string>(*l + *r);
     } else {
         throw InterpreterError(
-            nullptr, "Invalid arguments to _ci_test_add: Must be two numbers of strings");
+            nullptr, "Invalid arguments to _ci_test_add: Must be two numbers or strings");
     }
     return result;
 }
@@ -54,10 +57,14 @@ LoxFunction::LoxFunction(LoxParser::FunctionContext *declaration,
 
 size_t LoxFunction::arity()
 {
-    if (!declaration->parameters()) {
-        return 0;
+    size_t n = 0;
+    for (const auto &p : declaration->parameters()->children) {
+        if (p->getText() == ",") {
+            continue;
+        }
+        ++n;
     }
-    return declaration->parameters()->children.size();
+    return n;
 }
 
 antlrcpp::Any LoxFunction::call(Interpreter &interpreter, std::vector<antlrcpp::Any> &args)
@@ -65,15 +72,19 @@ antlrcpp::Any LoxFunction::call(Interpreter &interpreter, std::vector<antlrcpp::
     // Create a new environment for the function and set up its local variables
     // with the argument values
     auto environment = std::make_shared<Environment>(closure);
+    EnvironmentContext env_ctx(&interpreter.environment, environment);
+
     if (declaration->parameters()) {
         auto formal_params = declaration->parameters()->IDENTIFIER();
         for (size_t i = 0; i < formal_params.size(); ++i) {
+            std::cout << "Defining " << formal_params[i]->getText()
+                      << " type: " << pretty_type_name(args[i]) << "\n";
             environment->define(formal_params[i]->getText(), args[i]);
         }
     }
 
     try {
-        interpreter.visit_with_environment(declaration->block(), environment);
+        interpreter.visit(declaration->block());
     } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
         return ret->value;
     }

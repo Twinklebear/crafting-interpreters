@@ -35,3 +35,19 @@ private:
 
     Environment &ancestor(const size_t depth);
 };
+
+/* Utility for pushing/popping environments while ensuring they're properly
+ * popped at the end of the method visiting the statements with the given environment
+ */
+struct EnvironmentContext {
+    std::shared_ptr<Environment> prev;
+    std::shared_ptr<Environment> *current;
+
+    /* Push the given environment, will be popped back to the previous environment when
+     * the EnvironmentContext object is destroyed
+     */
+    EnvironmentContext(std::shared_ptr<Environment> *current,
+                       std::shared_ptr<Environment> push);
+
+    ~EnvironmentContext();
+};

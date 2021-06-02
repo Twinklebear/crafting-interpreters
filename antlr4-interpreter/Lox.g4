@@ -4,7 +4,7 @@ file: declaration* ;
 
 declaration: functionDecl
            | classDecl
-           | varDecl
+           | varDecl ';'
            | statement
            ;
 
@@ -12,7 +12,7 @@ functionDecl: 'fun' function ;
 
 classDecl: 'class' IDENTIFIER '{' function* '}' ;
 
-varDecl: 'var' IDENTIFIER ('=' expr)? ';' ;
+varDecl: 'var' IDENTIFIER ('=' expr)? ;
 
 function: IDENTIFIER '(' parameters? ')' block ;
 
@@ -35,15 +35,13 @@ whileStmt: 'while' '(' expr ')' statement ;
 
 // Separate names for the possible expressions in the for loop so it's easier to distinguish them
 // Note: statement can also be optional in most languages (C/C++/etc)
-forStmt: 'for' '(' (forVarDecl | forInit)? ';' forCond? ';' forAdvance? ')' statement ;
+forStmt: 'for' '(' (varDecl | forInit)? ';' forCond? ';' forAdvance? ')' statement ;
 
 forInit: expr ;
 
 forCond: expr ;
 
 forAdvance: expr ;
-
-forVarDecl: 'var' IDENTIFIER ('=' expr)? ;
 
 printStmt: 'print' expr ';' ;
 
