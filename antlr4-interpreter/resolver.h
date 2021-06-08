@@ -38,6 +38,8 @@ struct Resolver : public LoxBaseVisitor {
     // void visit(const Assign &a) override;
     // void visit(const Set &s) override;
 
+    antlrcpp::Any visitCallExpr(LoxParser::CallExprContext *ctx) override;
+
     antlrcpp::Any visitBlock(LoxParser::BlockContext *ctx) override;
     // void visit(const Block &b) override;
 

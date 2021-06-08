@@ -32,6 +32,14 @@ antlrcpp::Any Resolver::visitAssign(LoxParser::AssignContext *ctx)
     return antlrcpp::Any();
 }
 
+antlrcpp::Any Resolver::visitCallExpr(LoxParser::CallExprContext *ctx)
+{
+    // Resolve the callee on the left, then traverse children to resolve any arguments
+    resolve_local(ctx, ctx->IDENTIFIER(0)->getSymbol());
+    visitChildren(ctx);
+    return antlrcpp::Any();
+}
+
 antlrcpp::Any Resolver::visitBlock(LoxParser::BlockContext *ctx)
 {
     begin_scope();
