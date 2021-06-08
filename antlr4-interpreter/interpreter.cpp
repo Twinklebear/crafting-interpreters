@@ -121,7 +121,7 @@ antlrcpp::Any Interpreter::visitAddSub(LoxParser::AddSubContext *ctx)
 
     // Subtraction
     check_same_type(lhs, rhs, ctx->MINUS()->getSymbol());
-    check_type(rhs, {float_id}, ctx->PLUS()->getSymbol());
+    check_type(rhs, {float_id}, ctx->MINUS()->getSymbol());
     return lhs.as<float>() - rhs.as<float>();
 }
 
