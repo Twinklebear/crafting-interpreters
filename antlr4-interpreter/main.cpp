@@ -18,7 +18,7 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter);
 int main(int argc, char **argv)
 {
     if (argc > 2) {
-        std::cout << "Usage: interpreter [script]\n";
+        std::cerr << "Usage: interpreter [script]\n";
         return 1;
     }
 
@@ -66,7 +66,7 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
     tokens.fill();
 
     for (const auto &t : tokens.getTokens()) {
-        std::cout << t->toString() << "\n";
+        std::cerr << t->toString() << "\n";
     }
 
     // TODO: handle errors in parser
@@ -74,7 +74,7 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
     LoxParser parser(&tokens);
     antlr4::tree::ParseTree *tree = parser.file();
 
-    std::cout << tree->toStringTree(&parser) << "\n";
+    std::cerr << tree->toStringTree(&parser) << "\n";
 
     Resolver resolver(interpreter);
     resolver.visit(tree);
@@ -84,14 +84,14 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
     } catch (const InterpreterError &e) {
         if (e.token) {
             // This seems to still crash with the file input stream?
-            std::cout << "[error] at " << e.token->getLine() << ":"
+            std::cerr << "[error] at " << e.token->getLine() << ":"
                       << e.token->getCharPositionInLine() << ": " << e.message << "\n";
         } else {
-            std::cout << "[error] " << e.message << "\n";
+            std::cerr << "[error] " << e.message << "\n";
         }
         throw e;
     } catch (const std::runtime_error &e) {
-        std::cout << "interpreter error: " << e.what() << "\n";
+        std::cerr << "interpreter error: " << e.what() << "\n";
         std::exit(1);
     }
 }

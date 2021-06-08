@@ -283,7 +283,7 @@ void Interpreter::visit(const Print &p)
         } else if (val.type() == typeid(std::shared_ptr<LoxInstance>)) {
             std::cout << std::any_cast<std::shared_ptr<LoxInstance>>(val)->to_string() << "\n";
         } else {
-            std::cout << "[error]: Unsupported val type!?\n";
+            std::cerr << "[error]: Unsupported val type!?\n";
         }
     } else {
         std::cout << "nil";

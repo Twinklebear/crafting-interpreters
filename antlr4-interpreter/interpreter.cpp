@@ -178,7 +178,6 @@ antlrcpp::Any Interpreter::visitCallExpr(LoxParser::CallExprContext *ctx)
     // a chain. Subsequent calls are applied to the result of the previous expression.
     antlrcpp::Any result = lookup_variable(ctx->IDENTIFIER(0)->getSymbol(), ctx);
     for (size_t i = 1; i < ctx->children.size(); ++i) {
-        std::cout << "Call ctx child[" << i << "] = " << ctx->children[i]->toString() << "\n";
         // Passing arguments to the function call
         if (ctx->children[i]->getText() == "(") {
             std::shared_ptr<LoxCallable> fcn;
@@ -268,11 +267,8 @@ antlrcpp::Any Interpreter::visitAssign(LoxParser::AssignContext *ctx)
         try {
             auto fnd = locals.find(ctx);
             if (fnd != locals.end()) {
-                std::cout << "Assigning local var " << ctx->IDENTIFIER()->getText()
-                          << " at depth " << fnd->second << "\n";
                 environment->assign_at(fnd->second, ctx->IDENTIFIER()->getText(), val);
             } else {
-                std::cout << "Assigning global var\n";
                 globals->assign(ctx->IDENTIFIER()->getText(), val);
             }
         } catch (const std::runtime_error &) {
@@ -329,12 +325,9 @@ antlrcpp::Any Interpreter::visitForStmt(LoxParser::ForStmtContext *ctx)
 
     // Run the for loop initialization, if there's one
     if (for_init) {
-        std::cout << "Running for loop init\n";
         visit(for_init);
     }
-    environment->print_vars();
 
-    std::cout << "Running for loop\n";
     // Run the for loop
     while (!ctx->forCond() || is_true(visit(ctx->forCond()))) {
         try {
@@ -344,9 +337,7 @@ antlrcpp::Any Interpreter::visitForStmt(LoxParser::ForStmtContext *ctx)
         }
 
         if (ctx->forAdvance()) {
-            std::cout << __PRETTY_FUNCTION__ << "\n";
             visit(ctx->forAdvance());
-            std::cout << __PRETTY_FUNCTION__ << "\n";
         }
     }
     return antlrcpp::Any();
@@ -369,7 +360,7 @@ antlrcpp::Any Interpreter::visitPrintStmt(LoxParser::PrintStmtContext *ctx)
         } else if (val.is<std::shared_ptr<LoxInstance>>()) {
             std::cout << val.as<std::shared_ptr<LoxInstance>>()->to_string() << "\n";
         } else {
-            std::cout << "[error]: Print unsupported value type!?\n";
+            std::cerr << "[error]: Print unsupported value type!?\n";
         }
     } else {
         std::cout << "nil\n";
@@ -381,10 +372,8 @@ antlrcpp::Any Interpreter::visitVarDecl(LoxParser::VarDeclContext *ctx)
 {
     antlrcpp::Any initializer;
     if (ctx->expr()) {
-        std::cout << "Eval var initializer for " << ctx->IDENTIFIER()->getText() << "\n";
         initializer = visit(ctx->expr());
     }
-    std::cout << "Defining var '" << ctx->IDENTIFIER()->getText() << "'\n";
     environment->define(ctx->IDENTIFIER()->getText(), initializer);
     return antlrcpp::Any();
 }
@@ -501,11 +490,8 @@ antlrcpp::Any Interpreter::lookup_variable(const antlr4::Token *token,
 {
     auto fnd = locals.find(node);
     if (fnd != locals.end()) {
-        std::cout << "Lookup local var " << token->getText() << " at depth " << fnd->second
-                  << "\n";
         return environment->get_at(fnd->second, token->getText());
     } else {
-        std::cout << "looking in globals for '" << token->getText() << "'\n";
         return globals->get(token->getText());
     }
 }

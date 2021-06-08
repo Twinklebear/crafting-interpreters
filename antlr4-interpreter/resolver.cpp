@@ -59,16 +59,6 @@ antlrcpp::Any Resolver::visitForStmt(LoxParser::ForStmtContext *ctx)
 antlrcpp::Any Resolver::visitVarDecl(LoxParser::VarDeclContext *ctx)
 {
     declare(ctx->IDENTIFIER()->getSymbol());
-    // NOTE: The children are all tokens in the expression, both the named
-    // and the plain text tokens
-    std::cout << "At: " << ctx->IDENTIFIER()->getSymbol()->getLine() << ":"
-              << ctx->IDENTIFIER()->getSymbol()->getCharPositionInLine() << ", vardecl of "
-              << ctx->IDENTIFIER()->getText() << " has " << ctx->children.size()
-              << " children: {\n";
-    for (auto *c : ctx->children) {
-        std::cout << "    " << c->toString() << "\n";
-    }
-    std::cout << "}\n";
     visitChildren(ctx);
     define(ctx->IDENTIFIER()->getSymbol());
     return antlrcpp::Any();
@@ -107,7 +97,7 @@ void Resolver::end_scope()
     // For unused local var: when we pop the scope, check if it was read from
     for (const auto &v : scopes.back()) {
         if (!v.second.read) {
-            std::cout << "Warning: local variable " << v.first << " is never read\n";
+            std::cerr << "Warning: local variable " << v.first << " is never read\n";
         }
     }
     scopes.pop_back();
@@ -115,10 +105,7 @@ void Resolver::end_scope()
 
 void Resolver::declare(const antlr4::Token *name)
 {
-    std::cout << "At: " << name->getLine() << ":" << name->getCharPositionInLine()
-              << ": Declaring " << name->getText() << "\n";
     if (scopes.empty()) {
-        std::cout << "empty scopes\n";
         return;
     }
 
@@ -141,20 +128,16 @@ void Resolver::define(const antlr4::Token *name)
 
 void Resolver::resolve_local(antlr4::ParserRuleContext *node, const antlr4::Token *name)
 {
-    std::cout << "At: " << name->getLine() << ":" << name->getCharPositionInLine()
-              << ": Resolving " << name->getText() << "\n";
     // Walk back up the scopes until we find the closest one containing the variable
     for (int i = scopes.size() - 1; i >= 0; --i) {
         auto &scope = scopes[i];
         auto fnd = scope.find(name->getText());
         if (fnd != scope.end()) {
             fnd->second.read = true;
-            std::cout << "Variable found at depth " << scopes.size() - 1 - i << "\n";
             interpreter.resolve(node, scopes.size() - 1 - i);
             return;
         }
     }
-    std::cout << "Variable not found in any local scopes\n";
 }
 
 void Resolver::resolve_function(LoxParser::FunctionContext *f, const FunctionType type)

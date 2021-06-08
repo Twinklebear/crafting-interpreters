@@ -56,15 +56,6 @@ antlrcpp::Any Environment::get_at(const size_t depth, const std::string &name) c
     }
 }
 
-void Environment::print_vars() const
-{
-    std::cout << "inner most vars: {\n";
-    for (const auto &v : values) {
-        std::cout << v.first << "\n";
-    }
-    std::cout << "}\n";
-}
-
 const Environment &Environment::ancestor(const size_t depth) const
 {
     // Step back up the environments to the specified depth

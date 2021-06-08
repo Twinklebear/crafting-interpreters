@@ -1,35 +1,3 @@
-[Token]: FOR for for l1
-[Token]: LEFT_PAREN ( l1
-[Token]: VAR var var l1
-[Token]: IDENTIFIER i i l1
-[Token]: EQUAL = l1
-[Token]: NUMBER 0 0 l1
-[Token]: SEMICOLON ; l1
-[Token]: IDENTIFIER i i l1
-[Token]: LESS < l1
-[Token]: NUMBER 10 10 l1
-[Token]: SEMICOLON ; l1
-[Token]: IDENTIFIER i i l1
-[Token]: EQUAL = l1
-[Token]: IDENTIFIER i i l1
-[Token]: PLUS + l1
-[Token]: NUMBER 1 1 l1
-[Token]: RIGHT_PAREN ) l1
-[Token]: PRINT print print l1
-[Token]: IDENTIFIER i i l1
-[Token]: SEMICOLON ; l1
-[Token]: END_OF_FILE  l3
-Program:
-{BLOCK Stmt
-{VAR Stmt 'i' = 0.000000}
-{WHILE Stmt, cond: (LESS '<' (variable 'i') 10.000000)
-LOOP: {BLOCK Stmt
-{PRINT Stmt (variable 'i')}
-{EXPRESSION Stmt (assignment 'i' = (PLUS '+' (variable 'i') 1.000000))}
-}
-}
-}
-------
 0
 1
 2

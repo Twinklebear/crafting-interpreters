@@ -18,7 +18,7 @@ void run(const std::string &source, Interpreter &interpreter);
 int main(int argc, char **argv)
 {
     if (argc > 2) {
-        std::cout << "Usage: interpreter [script]\n";
+        std::cerr << "Usage: interpreter [script]\n";
         return 1;
     }
 
@@ -40,7 +40,7 @@ void run_file(const std::string &file)
             std::exit(1);
         }
     } catch (const std::runtime_error &e) {
-        std::cout << "interpreter error: " << e.what() << "\n";
+        std::cerr << "interpreter error: " << e.what() << "\n";
         std::exit(1);
     }
 }
@@ -63,7 +63,7 @@ void run(const std::string &source, Interpreter &interpreter)
     const auto &tokens = scanner.scan_tokens();
 
     for (const auto &t : tokens) {
-        std::cout << t << "\n";
+        std::cerr << t << "\n";
     }
 
     Parser parser(tokens);
@@ -81,7 +81,7 @@ void run(const std::string &source, Interpreter &interpreter)
     }
 
     ProgramPrinter printer;
-    std::cout << "Program:\n" << printer.print(statements) << "------\n";
+    std::cerr << "Program:\n" << printer.print(statements) << "------\n";
 
     interpreter.evaluate(statements);
 }

@@ -140,7 +140,7 @@ void Resolver::end_scope()
     // For unused local var: when we pop the scope, check if it was read from
     for (const auto &v : scopes.back()) {
         if (!v.second.read) {
-            std::cout << "Warning: local variable " << v.first << " is never read\n";
+            std::cerr << "Warning: local variable " << v.first << " is never read\n";
         }
     }
     scopes.pop_back();

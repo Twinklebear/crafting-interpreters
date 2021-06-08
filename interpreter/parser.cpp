@@ -29,7 +29,7 @@ std::shared_ptr<Stmt> Parser::declaration()
 
         return statement();
     } catch (const std::runtime_error &e) {
-        std::cout << "interpreter error: " << e.what() << "\n";
+        std::cerr << "interpreter error: " << e.what() << "\n";
         synchronize();
         return nullptr;
     }

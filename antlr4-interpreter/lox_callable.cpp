@@ -79,8 +79,6 @@ antlrcpp::Any LoxFunction::call(Interpreter &interpreter, std::vector<antlrcpp::
     if (declaration->parameters()) {
         auto formal_params = declaration->parameters()->IDENTIFIER();
         for (size_t i = 0; i < formal_params.size(); ++i) {
-            std::cout << "Defining " << formal_params[i]->getText()
-                      << " type: " << pretty_type_name(args[i]) << "\n";
             environment->define(formal_params[i]->getText(), args[i]);
         }
     }

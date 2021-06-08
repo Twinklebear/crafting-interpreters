@@ -19,11 +19,13 @@ for test_input in glob.glob("{}/*.lox".format(test_dir)):
     with open(expect_out_file, "r") as expect_file:
         ran_tests += 1
         expect_output = expect_file.read()
-        result = subprocess.run(["./interpreter", test_input], stdout=subprocess.PIPE)
+        result = subprocess.run(["./interpreter", test_input], stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
         output = result.stdout.decode("utf-8")
         if expect_output != output:
             failed_tests += 1
             print(ANSI_RED + "Failed" + ANSI_END)
+            print(result.stderr.decode("utf-8"))
         else:
             print(ANSI_GREEN + "Passed" + ANSI_END)
 
