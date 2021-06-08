@@ -92,7 +92,7 @@ expr: (MINUS | BANG) expr               # Unary
     | (IDENTIFIER | NUMBER | STRING |  'true' | 'false' | 'nil') # Primary
     ;
 
-callExpr: IDENTIFIER ( '(' arguments? ')' | '.' IDENTIFIER )+ ;
+callExpr: IDENTIFIER ( '(' arguments? ')' | '.' IDENTIFIER )* ;
 
 arguments: expr (',' expr)* ; 
 
