@@ -25,7 +25,9 @@ for test_input in glob.glob("{}/*.lox".format(test_dir)):
         if expect_output != output:
             failed_tests += 1
             print(ANSI_RED + "Failed" + ANSI_END)
-            print(result.stderr.decode("utf-8"))
+            print("Expected:\n{}\n----".format(expect_output))
+            print("Got output:\n{}\n----".format(output))
+            print("Stderr:\n{}\n----".format(result.stderr.decode("utf-8")))
         else:
             print(ANSI_GREEN + "Passed" + ANSI_END)
 
