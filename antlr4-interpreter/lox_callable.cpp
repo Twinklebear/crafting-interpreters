@@ -58,11 +58,13 @@ LoxFunction::LoxFunction(LoxParser::FunctionContext *declaration,
 size_t LoxFunction::arity()
 {
     size_t n = 0;
-    for (const auto &p : declaration->parameters()->children) {
-        if (p->getText() == ",") {
-            continue;
+    if (declaration->parameters()) {
+        for (const auto &p : declaration->parameters()->children) {
+            if (p->getText() == ",") {
+                continue;
+            }
+            ++n;
         }
-        ++n;
     }
     return n;
 }
