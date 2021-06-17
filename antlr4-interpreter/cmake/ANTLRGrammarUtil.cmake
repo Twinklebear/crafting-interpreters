@@ -26,10 +26,10 @@ function(antlr_grammar_util TargetName GrammarFile)
     add_custom_command(
         OUTPUT ${ANTLR_OUTPUTS}
         COMMAND ${Java_JAVA_EXECUTABLE} -jar ${ANTLR_EXECUTABLE}
-                ${GrammarFile}
-                -o ${OUTPUT_DIR}
-                -no-listener
-                -no-visitor
+            ${GrammarFile}
+            -o ${OUTPUT_DIR}
+            -no-listener
+            -no-visitor
         DEPENDS ${InputFile}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Building Grammar ${GrammarFile}")
@@ -40,7 +40,10 @@ function(antlr_grammar_util TargetName GrammarFile)
 
     add_custom_command(
         OUTPUT ${JAVA_CLASSES}
-        COMMAND ${Java_JAVAC_EXECUTABLE} ${JAVA_SRC}
+        COMMAND ${Java_JAVAC_EXECUTABLE}
+            -classpath "${OUTPUT_DIR}"
+            -classpath "${ANTLR_EXECUTABLE}"
+            ${JAVA_SRC}
         DEPENDS ${JAVA_SRC}
         WORKING_DIRECTORY ${OUTPUT_DIR}
         COMMENT "Compiling ${ANTLR_INPUT} Java Files")
