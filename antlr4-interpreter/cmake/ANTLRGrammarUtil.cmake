@@ -45,8 +45,6 @@ function(antlr_grammar_util TargetName GrammarFile)
         WORKING_DIRECTORY ${OUTPUT_DIR}
         COMMENT "Compiling ${ANTLR_INPUT} Java Files")
 
-    get_filename_component(ANTLR_DIR ${ANTLR_EXECUTABLE} DIRECTORY)
-
     configure_file(${ANTLR_GRAMMAR_UTIL_SH} ${TargetName}.sh @ONLY)
 
     add_custom_target(${TargetName} ALL DEPENDS ${JAVA_CLASSES} ${TargetName}.sh)
