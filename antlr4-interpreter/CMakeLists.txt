@@ -14,6 +14,8 @@ include(ExternalAntlr4Cpp)
 include_directories(${ANTLR4_INCLUDE_DIRS})
 find_package(ANTLR REQUIRED)
 
+include(ANTLRGrammarUtil)
+
 # Add the Lox Grammar
 antlr_target(LoxGrammar Lox.g4
     PACKAGE loxgrammar
@@ -21,6 +23,7 @@ antlr_target(LoxGrammar Lox.g4
     PARSER
     VISITOR)
 
+antlr_grammar_util(LoxGrammarUtil Lox.g4)
 
 add_executable(interpreter
     main.cpp
