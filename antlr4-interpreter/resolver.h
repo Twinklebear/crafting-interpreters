@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "LoxBaseVisitor.h"
+#include "LoxParserBaseVisitor.h"
 #include "antlr4-common.h"
 #include "environment.h"
 #include "interpreter.h"
@@ -17,7 +17,7 @@ struct VariableStatus {
     bool read = false;
 };
 
-struct Resolver : public LoxBaseVisitor {
+struct Resolver : public LoxParserBaseVisitor {
     // Treated as a stack, but we need to access scopes by index as well
     // when resolving variables
     std::vector<std::unordered_map<std::string, VariableStatus>> scopes;

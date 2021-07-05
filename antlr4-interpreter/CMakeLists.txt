@@ -17,13 +17,14 @@ find_package(ANTLR REQUIRED)
 include(ANTLRGrammarUtil)
 
 # Add the Lox Grammar
-antlr_target(LoxGrammar Lox.g4
+antlr_target(lox_grammar
     PACKAGE loxgrammar
-    LEXER
-    PARSER
+    LEXER LoxLexer.g4
+    PARSER LoxParser.g4
     VISITOR)
 
-antlr_grammar_util(LoxGrammarUtil Lox.g4)
+# TODO: also split lexer/parser
+#antlr_grammar_util(LoxGrammarUtil Lox.g4)
 
 add_executable(interpreter
     main.cpp
@@ -32,15 +33,13 @@ add_executable(interpreter
     environment.cpp
     lox_callable.cpp
     resolver.cpp
-    lox_class.cpp
-    ${ANTLR_LoxGrammar_CXX_OUTPUTS})
+    lox_class.cpp)
 
 target_include_directories(interpreter PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${ANTLR_LoxGrammar_OUTPUT_DIR})
+    ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(interpreter antlr4_static)
+target_link_libraries(interpreter lox_grammar)
 
 set_target_properties(interpreter PROPERTIES
 	CXX_STANDARD 17

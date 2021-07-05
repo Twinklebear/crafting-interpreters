@@ -4,7 +4,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include "LoxBaseVisitor.h"
+#include "LoxParserBaseVisitor.h"
 #include "antlr4-common.h"
 #include "environment.h"
 
@@ -27,7 +27,7 @@ struct ReturnControlFlow {
     ReturnControlFlow() = default;
 };
 
-struct Interpreter : public LoxBaseVisitor {
+struct Interpreter : public LoxParserBaseVisitor {
     std::shared_ptr<Environment> globals = std::make_shared<Environment>();
     std::shared_ptr<Environment> environment = globals;
     // Track the depth each variable expresion is resolved to
@@ -98,7 +98,6 @@ struct Interpreter : public LoxBaseVisitor {
 
     antlrcpp::Any visitClassDecl(LoxParser::ClassDeclContext *ctx) override;
     // void visit(const Class &c) override;
-
 
 private:
     std::type_index float_id, string_id, bool_id, nil_id, callable_id;
