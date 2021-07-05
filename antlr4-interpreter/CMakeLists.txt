@@ -23,8 +23,9 @@ antlr_target(lox_grammar
     PARSER LoxParser.g4
     VISITOR)
 
-# TODO: also split lexer/parser
-#antlr_grammar_util(LoxGrammarUtil Lox.g4)
+antlr_grammar_util(LoxGrammarUtil
+    LEXER LoxLexer.g4
+    PARSER LoxParser.g4)
 
 add_executable(interpreter
     main.cpp

@@ -23,11 +23,6 @@ if (ANTLR_EXECUTABLE AND Java_JAVA_EXECUTABLE)
             "failed with the output '${ANTLR_COMMAND_ERROR}'")
     endif()
 
-    # TODO: This doesn't help very well with separated lexer/parser grammars
-    # because the order you create them matters (the parser needs the .tokens file)
-    # So TODO: make a macro that takes both the parser and lexer files and then
-    # gives the same result as if they were a single combined parser/lexer file
-
     function(ANTLR_TARGET)
         set(ANTLR_OPTIONS LISTENER VISITOR)
         # TODO: Can also add a LEXER_PARSER option to still support single file lexer/parser

@@ -2,5 +2,5 @@
 
 export CLASSPATH="@OUTPUT_DIR@:@ANTLR_EXECUTABLE@:$CLASSPATH"
 
-@Java_JAVA_EXECUTABLE@ org.antlr.v4.gui.TestRig @ANTLR_INPUT@ $@
+@Java_JAVA_EXECUTABLE@ org.antlr.v4.gui.TestRig @ANTLR_GRAMMAR_NAME@ $@
 
