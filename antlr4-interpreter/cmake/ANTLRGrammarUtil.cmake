@@ -30,7 +30,7 @@ function(antlr_grammar_util TargetName GrammarFile)
             -o ${OUTPUT_DIR}
             -no-listener
             -no-visitor
-        DEPENDS ${InputFile}
+        DEPENDS ${GrammarFile}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Building Grammar ${GrammarFile}")
 
