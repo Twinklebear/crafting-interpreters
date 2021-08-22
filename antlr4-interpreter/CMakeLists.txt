@@ -37,11 +37,11 @@ add_custom_command(OUTPUT expr.cpp
 add_executable(interpreter
     main.cpp
     util.cpp
-    #interpreter.cpp
-    #environment.cpp
-    #lox_callable.cpp
-    #resolver.cpp
-    #lox_class.cpp
+    interpreter.cpp
+    resolver.cpp
+    environment.cpp
+    lox_callable.cpp
+    lox_class.cpp
     ast_builder.cpp
     ast_printer.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/expr.cpp)

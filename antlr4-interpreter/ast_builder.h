@@ -25,6 +25,8 @@ struct ASTBuilder : public LoxParserBaseVisitor {
     antlrcpp::Any visitClassDecl(LoxParser::ClassDeclContext *ctx) override;
     // void visit(const Class &c) override;
 
+    antlrcpp::Any visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx) override;
+
     antlrcpp::Any visitVarDecl(LoxParser::VarDeclContext *ctx) override;
     // void visit(const Var &v) override;
 

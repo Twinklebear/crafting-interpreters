@@ -8,13 +8,15 @@ file: declaration* ;
 
 declaration: functionDecl
            | classDecl
-           | varDecl SEMICOLON
+           | varDeclStmt
            | statement
            ;
 
 functionDecl: FUN function ;
 
 classDecl: CLASS IDENTIFIER LEFT_BRACE function* RIGHT_BRACE ;
+
+varDeclStmt: varDecl SEMICOLON ;
 
 varDecl: VAR IDENTIFIER (EQUAL expr)? ;
 
@@ -96,8 +98,8 @@ expr: (MINUS | BANG) expr                                     # Unary
     | (IDENTIFIER | NUMBER | STRING | TRUE | FALSE | NIL)     # Primary
     ;
 
-callExpr: IDENTIFIER ( LEFT_PAREN arguments? RIGHT_PAREN | PERIOD memberIdentifier )* ;
+callExpr: IDENTIFIER ( arguments | PERIOD memberIdentifier )* ;
 
-arguments: expr (COMMA expr)* ; 
+arguments: LEFT_PAREN expr? (COMMA expr)* RIGHT_PAREN ; 
 
 memberIdentifier: IDENTIFIER ;

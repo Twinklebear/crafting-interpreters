@@ -28,7 +28,7 @@ antlrcpp::Any ASTBuilder::visitFunction(LoxParser::FunctionContext *ctx)
     }
 
     auto block = visitBlock(ctx->block());
-    auto block_expr = block.as<std::shared_ptr<Block>>();
+    auto block_expr = block.as<std::shared_ptr<Stmt>>();
     return std::make_shared<Function>(name, params, block_expr);
 }
 
@@ -41,6 +41,11 @@ antlrcpp::Any ASTBuilder::visitClassDecl(LoxParser::ClassDeclContext *ctx)
     }
     auto c = std::make_shared<Class>(name, methods);
     return std::static_pointer_cast<Stmt>(c);
+}
+
+antlrcpp::Any ASTBuilder::visitVarDeclStmt(LoxParser::VarDeclStmtContext *ctx)
+{
+    return visit(ctx->varDecl());
 }
 
 antlrcpp::Any ASTBuilder::visitVarDecl(LoxParser::VarDeclContext *ctx)
@@ -96,7 +101,7 @@ antlrcpp::Any ASTBuilder::visitForStmt(LoxParser::ForStmtContext *ctx)
     auto body = visit(ctx->statement()).as<std::shared_ptr<Stmt>>();
 
     if (ctx->forAdvance()) {
-        auto expr = visit(ctx->forInit()->expr()).as<std::shared_ptr<Expr>>();
+        auto expr = visit(ctx->forAdvance()->expr()).as<std::shared_ptr<Expr>>();
         auto advance = std::make_shared<Expression>(expr);
 
         body = std::make_shared<Block>(std::vector<std::shared_ptr<Stmt>>{body, advance});
@@ -153,7 +158,6 @@ antlrcpp::Any ASTBuilder::visitUnary(LoxParser::UnaryContext *ctx)
 antlrcpp::Any ASTBuilder::visitCallExpr(LoxParser::CallExprContext *ctx)
 {
     std::shared_ptr<Expr> expr = std::make_shared<Variable>(ctx->IDENTIFIER()->getSymbol());
-
     for (size_t i = 1; i < ctx->children.size(); ++i) {
         auto child = ctx->children[i];
         auto res = visit(child);
@@ -169,7 +173,7 @@ antlrcpp::Any ASTBuilder::visitCallExpr(LoxParser::CallExprContext *ctx)
             }
         }
     }
-    return std::static_pointer_cast<Expr>(expr);
+    return expr;
 }
 
 antlrcpp::Any ASTBuilder::visitArguments(LoxParser::ArgumentsContext *ctx)
@@ -190,7 +194,7 @@ antlrcpp::Any ASTBuilder::visitMemberIdentifier(LoxParser::MemberIdentifierConte
 antlrcpp::Any ASTBuilder::visitMult(LoxParser::MultContext *ctx)
 {
     auto left = visit(ctx->children[0]).as<std::shared_ptr<Expr>>();
-    auto right = visit(ctx->children[1]).as<std::shared_ptr<Expr>>();
+    auto right = visit(ctx->children[2]).as<std::shared_ptr<Expr>>();
     auto mult = std::make_shared<Binary>(left, ctx->STAR()->getSymbol(), right);
     return std::static_pointer_cast<Expr>(mult);
 }
@@ -198,7 +202,7 @@ antlrcpp::Any ASTBuilder::visitMult(LoxParser::MultContext *ctx)
 antlrcpp::Any ASTBuilder::visitDiv(LoxParser::DivContext *ctx)
 {
     auto left = visit(ctx->children[0]).as<std::shared_ptr<Expr>>();
-    auto right = visit(ctx->children[1]).as<std::shared_ptr<Expr>>();
+    auto right = visit(ctx->children[2]).as<std::shared_ptr<Expr>>();
     auto div = std::make_shared<Binary>(left, ctx->SLASH()->getSymbol(), right);
     return std::static_pointer_cast<Expr>(div);
 }
@@ -206,7 +210,7 @@ antlrcpp::Any ASTBuilder::visitDiv(LoxParser::DivContext *ctx)
 antlrcpp::Any ASTBuilder::visitAddSub(LoxParser::AddSubContext *ctx)
 {
     auto left = visit(ctx->children[0]).as<std::shared_ptr<Expr>>();
-    auto right = visit(ctx->children[1]).as<std::shared_ptr<Expr>>();
+    auto right = visit(ctx->children[2]).as<std::shared_ptr<Expr>>();
 
     std::shared_ptr<Expr> expr;
     if (ctx->PLUS()) {
@@ -221,7 +225,7 @@ antlrcpp::Any ASTBuilder::visitAddSub(LoxParser::AddSubContext *ctx)
 antlrcpp::Any ASTBuilder::visitComparison(LoxParser::ComparisonContext *ctx)
 {
     auto left = visit(ctx->children[0]).as<std::shared_ptr<Expr>>();
-    auto right = visit(ctx->children[1]).as<std::shared_ptr<Expr>>();
+    auto right = visit(ctx->children[2]).as<std::shared_ptr<Expr>>();
 
     std::shared_ptr<Expr> expr;
     if (ctx->LESS()) {
@@ -239,7 +243,7 @@ antlrcpp::Any ASTBuilder::visitComparison(LoxParser::ComparisonContext *ctx)
 antlrcpp::Any ASTBuilder::visitEquality(LoxParser::EqualityContext *ctx)
 {
     auto left = visit(ctx->children[0]).as<std::shared_ptr<Expr>>();
-    auto right = visit(ctx->children[1]).as<std::shared_ptr<Expr>>();
+    auto right = visit(ctx->children[2]).as<std::shared_ptr<Expr>>();
 
     std::shared_ptr<Expr> expr;
     if (ctx->NOT_EQUAL()) {
@@ -253,7 +257,7 @@ antlrcpp::Any ASTBuilder::visitEquality(LoxParser::EqualityContext *ctx)
 antlrcpp::Any ASTBuilder::visitLogicAnd(LoxParser::LogicAndContext *ctx)
 {
     auto left = visit(ctx->children[0]).as<std::shared_ptr<Expr>>();
-    auto right = visit(ctx->children[1]).as<std::shared_ptr<Expr>>();
+    auto right = visit(ctx->children[2]).as<std::shared_ptr<Expr>>();
 
     auto expr = std::make_shared<Binary>(left, ctx->AND()->getSymbol(), right);
     return std::static_pointer_cast<Expr>(expr);
@@ -262,7 +266,7 @@ antlrcpp::Any ASTBuilder::visitLogicAnd(LoxParser::LogicAndContext *ctx)
 antlrcpp::Any ASTBuilder::visitLogicOr(LoxParser::LogicOrContext *ctx)
 {
     auto left = visit(ctx->children[0]).as<std::shared_ptr<Expr>>();
-    auto right = visit(ctx->children[1]).as<std::shared_ptr<Expr>>();
+    auto right = visit(ctx->children[2]).as<std::shared_ptr<Expr>>();
 
     auto expr = std::make_shared<Binary>(left, ctx->OR()->getSymbol(), right);
     return std::static_pointer_cast<Expr>(expr);
@@ -272,14 +276,14 @@ antlrcpp::Any ASTBuilder::visitAssign(LoxParser::AssignContext *ctx)
 {
     auto rhs = visit(ctx->expr()).as<std::shared_ptr<Expr>>();
     // If there's a call expr, we're setting a struct member
-    std::shared_ptr<Expr> lhs;
+    std::shared_ptr<Expr> expr;
     if (ctx->callExpr()) {
         auto obj = visitCallExpr(ctx->callExpr()).as<std::shared_ptr<Expr>>();
-        lhs = std::make_shared<Set>(obj, ctx->IDENTIFIER()->getSymbol(), rhs);
+        expr = std::make_shared<Set>(obj, ctx->IDENTIFIER()->getSymbol(), rhs);
     } else {
-        lhs = std::make_shared<Variable>(ctx->IDENTIFIER()->getSymbol());
+        expr = std::make_shared<Assign>(ctx->IDENTIFIER()->getSymbol(), rhs);
     }
-    return lhs;
+    return expr;
 }
 
 antlrcpp::Any ASTBuilder::visitParens(LoxParser::ParensContext *ctx)
@@ -297,7 +301,10 @@ antlrcpp::Any ASTBuilder::visitPrimary(LoxParser::PrimaryContext *ctx)
     } else if (ctx->NUMBER()) {
         expr = std::make_shared<Literal>(std::stof(ctx->NUMBER()->getText()));
     } else if (ctx->STRING()) {
-        expr = std::make_shared<Literal>(ctx->NUMBER()->getText());
+        // Remove the opening and closing quotes
+        auto str = ctx->STRING()->getText();
+        str = str.substr(1, str.size() - 2);
+        expr = std::make_shared<Literal>(str);
     } else if (ctx->TRUE()) {
         expr = std::make_shared<Literal>(true);
     } else if (ctx->FALSE()) {
