@@ -27,14 +27,24 @@ antlr_grammar_util(LoxGrammarUtil
     LEXER LoxLexer.g4
     PARSER LoxParser.g4)
 
+# Generate my AST nodes
+find_package(Python COMPONENTS Interpreter)
+add_custom_command(OUTPUT expr.cpp
+    COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/gen_expr.py
+        ${CMAKE_CURRENT_BINARY_DIR}/expr
+    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/gen_expr.py)
+
 add_executable(interpreter
     main.cpp
     util.cpp
-    interpreter.cpp
-    environment.cpp
-    lox_callable.cpp
-    resolver.cpp
-    lox_class.cpp)
+    #interpreter.cpp
+    #environment.cpp
+    #lox_callable.cpp
+    #resolver.cpp
+    #lox_class.cpp
+    ast_builder.cpp
+    ast_printer.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/expr.cpp)
 
 target_include_directories(interpreter PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}

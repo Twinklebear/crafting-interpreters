@@ -96,6 +96,8 @@ expr: (MINUS | BANG) expr                                     # Unary
     | (IDENTIFIER | NUMBER | STRING | TRUE | FALSE | NIL)     # Primary
     ;
 
-callExpr: IDENTIFIER ( LEFT_PAREN arguments? RIGHT_PAREN | PERIOD IDENTIFIER )* ;
+callExpr: IDENTIFIER ( LEFT_PAREN arguments? RIGHT_PAREN | PERIOD memberIdentifier )* ;
 
 arguments: expr (COMMA expr)* ; 
+
+memberIdentifier: IDENTIFIER ;

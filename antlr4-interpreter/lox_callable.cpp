@@ -60,6 +60,8 @@ size_t LoxFunction::arity()
     size_t n = 0;
     if (declaration->parameters()) {
         for (const auto &p : declaration->parameters()->children) {
+            // TODO: building AST will fix this annoying issue where
+            // tokens I don't care about are here in the tree
             if (p->getText() == ",") {
                 continue;
             }

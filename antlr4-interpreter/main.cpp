@@ -5,15 +5,17 @@
 #include "LoxLexer.h"
 #include "LoxParser.h"
 #include "antlr4-runtime.h"
-#include "interpreter.h"
-#include "resolver.h"
+#include "ast_builder.h"
+#include "ast_printer.h"
+//#include "interpreter.h"
+//#include "resolver.h"
 #include "util.h"
 
 using namespace loxgrammar;
 
 void run_file(const std::string &file);
 void run_prompt();
-void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter);
+void run(antlr4::ANTLRInputStream &input);  //, Interpreter &interpreter);
 
 int main(int argc, char **argv)
 {
@@ -35,31 +37,34 @@ void run_file(const std::string &file)
 {
     antlr4::ANTLRFileStream input;
     input.loadFromFile(file);
-    try {
-        Interpreter interpreter;
-        run(input, interpreter);
-    } catch (const InterpreterError &e) {
-        std::exit(1);
-    }
+    // try {
+    //   Interpreter interpreter;
+    run(input);  //, interpreter);
+    //} catch (const InterpreterError &e) {
+    //   std::exit(1);
+    //}
 }
 
 void run_prompt()
 {
     std::cout << "> ";
     std::string line;
-    Interpreter interpreter;
+    // Interpreter interpreter;
     while (std::getline(std::cin, line)) {
         antlr4::ANTLRInputStream input(line);
+        run(input);
+        /*
         try {
             run(input, interpreter);
         } catch (const InterpreterError &e) {
             // Prompt doesn't quit on errors, just prints them (in run)
         }
+        */
         std::cout << "> ";
     }
 }
 
-void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
+void run(antlr4::ANTLRInputStream &input)  //, Interpreter &interpreter)
 {
     LoxLexer lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
@@ -76,6 +81,14 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
 
     std::cerr << tree->toStringTree(&parser) << "\n";
 
+    // TODO: Build AST, then hand off to interpreter code from before
+    ASTBuilder ast_builder;
+    ast_builder.visit(tree);
+
+    ProgramPrinter printer;
+    std::cout << "AST of program:\n" << printer.print(ast_builder.statements) << "\n";
+
+    /*
     Resolver resolver(interpreter);
     resolver.visit(tree);
 
@@ -94,4 +107,5 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
         std::cerr << "interpreter error: " << e.what() << "\n";
         std::exit(1);
     }
+    */
 }
