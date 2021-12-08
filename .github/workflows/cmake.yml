@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     # Just share ANTLR4 config for all runners
     env:
-      CLASSPATH: ${{github.workspace}}/antlr4/antlr-4.9.2-complete.jar
+      CLASSPATH: ${{github.workspace}}/antlr4/antlr-4.9.3-complete.jar
     strategy:
       matrix:
         interpreter: [interpreter, antlr4-interpreter]
@@ -25,7 +25,7 @@ jobs:
 
     - name: Setup ANTLR4
       run: |
-        wget https://www.antlr.org/download/antlr-4.9.2-complete.jar
+        wget https://www.antlr.org/download/antlr-4.9.3-complete.jar
         echo "${{github.workspace}}/" >> $GITHUB_PATH
 
     - name: Create Build Environment
