@@ -31,7 +31,11 @@ void error(int line, const std::string &msg)
 void error(const antlr4::Token *t, const std::string &msg)
 {
     had_error = true;
-    report(t->getLine(), " at '" + t->getText() + "'", msg);
+    if (t) {
+        report(t->getLine(), " at '" + t->getText() + "'", msg);
+    } else {
+        report(-1, "unknown/generated token location", msg);
+    }
 }
 
 std::string pretty_type_name(const antlrcpp::Any &t)

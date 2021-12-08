@@ -10,22 +10,22 @@ struct LoxClass : LoxCallable {
 
     LoxClass(const std::string &name);
 
-    size_t arity() override;
+    size_t arity() const override;
 
-    antlrcpp::Any call(Interpreter &interpreter, std::vector<antlrcpp::Any> &args) override;
+    std::any call(Interpreter &interpreter, std::vector<std::any> &args) override;
 
     std::string to_string() const override;
 };
 
 struct LoxInstance {
     const LoxClass &lox_class;
-    std::unordered_map<std::string, antlrcpp::Any> fields;
+    std::unordered_map<std::string, std::any> fields;
 
     LoxInstance(const LoxClass &lox_class);
 
     std::string to_string() const;
 
-    antlrcpp::Any get(const antlr4::Token *name);
+    std::any get(const antlr4::Token *name);
 
-    void set(const antlr4::Token *name, const antlrcpp::Any &value);
+    void set(const antlr4::Token *name, const std::any &value);
 };

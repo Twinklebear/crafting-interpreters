@@ -1,14 +1,13 @@
 #include "lox_callable.h"
 #include <chrono>
 #include <iostream>
-#include "util.h"
 
-size_t Clock::arity()
+size_t Clock::arity() const
 {
     return 0;
 }
 
-antlrcpp::Any Clock::call(Interpreter &, std::vector<antlrcpp::Any> &)
+std::any Clock::call(Interpreter &, std::vector<std::any> &)
 {
     using namespace std::chrono;
     const auto now = steady_clock::now();
@@ -21,25 +20,23 @@ std::string Clock::to_string() const
     return "<fn clock>";
 }
 
-size_t CITestAdd::arity()
+size_t CITestAdd::arity() const
 {
     return 2;
 }
 
-antlrcpp::Any CITestAdd::call(Interpreter &, std::vector<antlrcpp::Any> &args)
+std::any CITestAdd::call(Interpreter &, std::vector<std::any> &args)
 {
     auto left = args[0];
     auto right = args[1];
-    antlrcpp::Any result;
-    if (left.is<float>() && right.is<float>()) {
-        result = left.as<float>() + right.as<float>();
-    } else if (left.is<StringPtr>() && right.is<StringPtr>()) {
-        auto l = left.as<StringPtr>();
-        auto r = right.as<StringPtr>();
-        result = std::make_shared<std::string>(*l + *r);
+    std::any result;
+    if (left.type() == typeid(float) && right.type() == typeid(float)) {
+        result = std::any_cast<float>(left) + std::any_cast<float>(right);
+    } else if (left.type() == typeid(std::string) && right.type() == typeid(std::string)) {
+        result = std::any_cast<std::string>(left) + std::any_cast<std::string>(right);
     } else {
         throw InterpreterError(
-            nullptr, "Invalid arguments to _ci_test_add: Must be two numbers or strings");
+            nullptr, "Invalid arguments to _ci_test_add: Must be two numbers of strings");
     }
     return result;
 }
@@ -49,49 +46,35 @@ std::string CITestAdd::to_string() const
     return "<fn _ci_test_add>";
 }
 
-LoxFunction::LoxFunction(LoxParser::FunctionContext *declaration,
+LoxFunction::LoxFunction(const Function &declaration,
                          const std::shared_ptr<Environment> &closure)
     : declaration(declaration), closure(closure)
 {
 }
 
-size_t LoxFunction::arity()
+size_t LoxFunction::arity() const
 {
-    size_t n = 0;
-    if (declaration->parameters()) {
-        for (const auto &p : declaration->parameters()->children) {
-            if (p->getText() == ",") {
-                continue;
-            }
-            ++n;
-        }
-    }
-    return n;
+    return declaration.params.size();
 }
 
-antlrcpp::Any LoxFunction::call(Interpreter &interpreter, std::vector<antlrcpp::Any> &args)
+std::any LoxFunction::call(Interpreter &interpreter, std::vector<std::any> &args)
 {
     // Create a new environment for the function and set up its local variables
     // with the argument values
     auto environment = std::make_shared<Environment>(closure);
-    EnvironmentContext env_ctx(&interpreter.environment, environment);
-
-    if (declaration->parameters()) {
-        auto formal_params = declaration->parameters()->IDENTIFIER();
-        for (size_t i = 0; i < formal_params.size(); ++i) {
-            environment->define(formal_params[i]->getText(), args[i]);
-        }
+    for (size_t i = 0; i < declaration.params.size(); ++i) {
+        environment->define(declaration.params[i]->getText(), args[i]);
     }
 
     try {
-        interpreter.visit(declaration->block());
+        interpreter.execute_block({declaration.body}, environment);
     } catch (const std::shared_ptr<ReturnControlFlow> &ret) {
         return ret->value;
     }
-    return antlrcpp::Any();
+    return std::any();
 }
 
 std::string LoxFunction::to_string() const
 {
-    return "<fn " + declaration->IDENTIFIER()->getText() + ">";
+    return "<fn " + declaration.name->getText() + ">";
 }

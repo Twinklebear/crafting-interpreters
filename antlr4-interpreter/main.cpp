@@ -5,6 +5,8 @@
 #include "LoxLexer.h"
 #include "LoxParser.h"
 #include "antlr4-runtime.h"
+#include "ast_builder.h"
+#include "ast_printer.h"
 #include "interpreter.h"
 #include "resolver.h"
 #include "util.h"
@@ -39,6 +41,16 @@ void run_file(const std::string &file)
         Interpreter interpreter;
         run(input, interpreter);
     } catch (const InterpreterError &e) {
+        if (e.token) {
+            // This seems to still crash with the file input stream?
+            std::cerr << "[error] at " << e.token->getLine() << ":"
+                      << e.token->getCharPositionInLine() << ": " << e.message << "\n";
+        } else {
+            std::cerr << "[error] " << e.message << "\n";
+        }
+        throw e;
+    } catch (const std::runtime_error &e) {
+        std::cerr << "interpreter error: " << e.what() << "\n";
         std::exit(1);
     }
 }
@@ -76,22 +88,14 @@ void run(antlr4::ANTLRInputStream &input, Interpreter &interpreter)
 
     std::cerr << tree->toStringTree(&parser) << "\n";
 
-    Resolver resolver(interpreter);
-    resolver.visit(tree);
+    ASTBuilder ast_builder;
+    ast_builder.visit(tree);
 
-    try {
-        interpreter.visit(tree);
-    } catch (const InterpreterError &e) {
-        if (e.token) {
-            // This seems to still crash with the file input stream?
-            std::cerr << "[error] at " << e.token->getLine() << ":"
-                      << e.token->getCharPositionInLine() << ": " << e.message << "\n";
-        } else {
-            std::cerr << "[error] " << e.message << "\n";
-        }
-        throw e;
-    } catch (const std::runtime_error &e) {
-        std::cerr << "interpreter error: " << e.what() << "\n";
-        std::exit(1);
-    }
+    Resolver resolver(interpreter);
+    resolver.resolve(ast_builder.statements);
+
+    ProgramPrinter printer;
+    std::cerr << "Program:\n" << printer.print(ast_builder.statements) << "------\n";
+
+    interpreter.evaluate(ast_builder.statements);
 }

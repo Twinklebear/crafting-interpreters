@@ -4,11 +4,10 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include "LoxBaseVisitor.h"
 #include "antlr4-common.h"
+#include "antlr4-runtime.h"
 #include "environment.h"
-
-using namespace loxgrammar;
+#include "expr.h"
 
 struct InterpreterError {
     const antlr4::Token *token;
@@ -18,16 +17,16 @@ struct InterpreterError {
 };
 
 struct ReturnControlFlow {
-    antlrcpp::Any value;
+    std::any value;
 
-    ReturnControlFlow(const antlrcpp::Any &value);
+    ReturnControlFlow(const std::any &value);
 
     ReturnControlFlow(const ReturnControlFlow &r) = default;
 
     ReturnControlFlow() = default;
 };
 
-struct Interpreter : public LoxBaseVisitor {
+struct Interpreter : Expr::Visitor, Stmt::Visitor {
     std::shared_ptr<Environment> globals = std::make_shared<Environment>();
     std::shared_ptr<Environment> environment = globals;
     // Track the depth each variable expresion is resolved to
@@ -36,69 +35,40 @@ struct Interpreter : public LoxBaseVisitor {
     // with how the visitor pattern works here the shared ptr is not directly
     // accessible since visit is called by the object itself.
     // Maybe clox introduces a better design here, or just uses raw pointers throughout?
-    std::unordered_map<const antlr4::ParserRuleContext *, size_t> locals;
+    std::unordered_map<const Expr *, size_t> locals;
+    std::any result;
 
     Interpreter();
 
-    void resolve(const antlr4::ParserRuleContext *node, size_t depth);
+    void evaluate(const std::vector<std::shared_ptr<Stmt>> &statements);
 
-    antlrcpp::Any visitPrimary(LoxParser::PrimaryContext *ctx) override;
-    // void visit(const Literal &l) override;
-    // void visit(const Variable &v) override;
+    const std::any &evaluate(const Expr &expr);
 
-    antlrcpp::Any visitUnary(LoxParser::UnaryContext *ctx) override;
-    // void visit(const Unary &u) override;
+    void execute_block(const std::vector<std::shared_ptr<Stmt>> &statements,
+                       std::shared_ptr<Environment> &env);
 
-    antlrcpp::Any visitDiv(LoxParser::DivContext *ctx) override;
-    antlrcpp::Any visitMult(LoxParser::MultContext *ctx) override;
-    antlrcpp::Any visitAddSub(LoxParser::AddSubContext *ctx) override;
-    antlrcpp::Any visitComparison(LoxParser::ComparisonContext *ctx) override;
-    antlrcpp::Any visitEquality(LoxParser::EqualityContext *ctx) override;
-    // void visit(const Binary &b) override;
+    void resolve(const Expr &expr, size_t depth);
 
-    antlrcpp::Any visitCallExpr(LoxParser::CallExprContext *ctx) override;
-    // void visit(const Call &c) override;
-    // void visit(const Get &g) override;
+    void visit(const Grouping &g) override;
+    void visit(const Literal &l) override;
+    void visit(const Unary &u) override;
+    void visit(const Binary &b) override;
+    void visit(const Call &c) override;
+    void visit(const Logical &l) override;
+    void visit(const Variable &v) override;
+    void visit(const Assign &a) override;
+    void visit(const Get &g) override;
+    void visit(const Set &s) override;
 
-    antlrcpp::Any visitLogicOr(LoxParser::LogicOrContext *ctx) override;
-    antlrcpp::Any visitLogicAnd(LoxParser::LogicAndContext *ctx) override;
-    // void visit(const Logical &l) override;
-
-    // TODO: Assign can also have a callExpr on the left which it needs to evaluate,
-    // e.g., when setting a struct member variable
-    antlrcpp::Any visitAssign(LoxParser::AssignContext *ctx) override;
-    // void visit(const Assign &a) override;
-    // void visit(const Set &s) override;
-
-    antlrcpp::Any visitBlock(LoxParser::BlockContext *ctx) override;
-    // void visit(const Block &b) override;
-
-    antlrcpp::Any visitExprStmt(LoxParser::ExprStmtContext *ctx) override;
-    // void visit(const Expression &e) override;
-
-    antlrcpp::Any visitIfStmt(LoxParser::IfStmtContext *ctx) override;
-    // void visit(const If &f) override;
-
-    antlrcpp::Any visitWhileStmt(LoxParser::WhileStmtContext *ctx) override;
-    // void visit(const While &w) override;
-
-    antlrcpp::Any visitForStmt(LoxParser::ForStmtContext *ctx) override;
-
-    antlrcpp::Any visitPrintStmt(LoxParser::PrintStmtContext *ctx) override;
-    // void visit(const Print &p) override;
-
-    antlrcpp::Any visitVarDecl(LoxParser::VarDeclContext *ctx) override;
-    // void visit(const Var &v) override;
-
-    antlrcpp::Any visitFunction(LoxParser::FunctionContext *ctx) override;
-    // void visit(const Function &f) override;
-
-    antlrcpp::Any visitReturnStmt(LoxParser::ReturnStmtContext *ctx) override;
-    // void visit(const Return &r) override;
-
-    antlrcpp::Any visitClassDecl(LoxParser::ClassDeclContext *ctx) override;
-    // void visit(const Class &c) override;
-
+    void visit(const Block &b) override;
+    void visit(const Expression &e) override;
+    void visit(const If &f) override;
+    void visit(const While &w) override;
+    void visit(const Print &p) override;
+    void visit(const Var &v) override;
+    void visit(const Function &f) override;
+    void visit(const Return &r) override;
+    void visit(const Class &c) override;
 
 private:
     std::type_index float_id, string_id, bool_id, nil_id, callable_id;
@@ -106,19 +76,16 @@ private:
 
     // Check if the type is one of the specified valid types, if not throws an
     // InterpreterError
-    void check_type(const antlrcpp::Any &val,
+    void check_type(const std::any &val,
                     const std::vector<std::type_index> &valid_types,
                     const antlr4::Token *t);
 
     // Check if the two anys have the same type, if not throws an InterpreterError
-    void check_same_type(const antlrcpp::Any &a,
-                         const antlrcpp::Any &b,
-                         const antlr4::Token *t) const;
+    void check_same_type(const std::any &a, const std::any &b, const antlr4::Token *t) const;
 
-    bool is_true(const antlrcpp::Any &x) const;
+    bool is_true(const std::any &x) const;
 
-    bool is_equal(const antlrcpp::Any &a, const antlrcpp::Any &b) const;
+    bool is_equal(const std::any &a, const std::any &b) const;
 
-    antlrcpp::Any lookup_variable(const antlr4::Token *token,
-                                  const antlr4::ParserRuleContext *node) const;
+    std::any lookup_variable(const antlr4::Token *token, const Expr &expr) const;
 };

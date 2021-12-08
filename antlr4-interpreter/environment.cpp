@@ -4,12 +4,12 @@
 
 Environment::Environment(std::shared_ptr<Environment> &enclosing) : enclosing(enclosing) {}
 
-void Environment::define(const std::string &name, const antlrcpp::Any &val)
+void Environment::define(const std::string &name, const std::any &val)
 {
     values[name] = val;
 }
 
-void Environment::assign(const std::string &name, const antlrcpp::Any &val)
+void Environment::assign(const std::string &name, const std::any &val)
 {
     auto fnd = values.find(name);
     if (fnd != values.end()) {
@@ -21,9 +21,7 @@ void Environment::assign(const std::string &name, const antlrcpp::Any &val)
     }
 }
 
-void Environment::assign_at(const size_t depth,
-                            const std::string &name,
-                            const antlrcpp::Any &val)
+void Environment::assign_at(const size_t depth, const std::string &name, const std::any &val)
 {
     auto &a = ancestor(depth);
     auto fnd = a.values.find(name);
@@ -34,7 +32,7 @@ void Environment::assign_at(const size_t depth,
     }
 }
 
-antlrcpp::Any Environment::get(const std::string &name) const
+std::any Environment::get(const std::string &name) const
 {
     auto fnd = values.find(name);
     if (fnd != values.end()) {
@@ -45,7 +43,7 @@ antlrcpp::Any Environment::get(const std::string &name) const
     throw std::runtime_error("Undefined variable '" + name + "'");
 }
 
-antlrcpp::Any Environment::get_at(const size_t depth, const std::string &name) const
+std::any Environment::get_at(const size_t depth, const std::string &name) const
 {
     const auto &a = ancestor(depth);
     auto fnd = a.values.find(name);
@@ -74,16 +72,4 @@ Environment &Environment::ancestor(const size_t depth)
         next = next->enclosing.get();
     }
     return *next;
-}
-
-EnvironmentContext::EnvironmentContext(std::shared_ptr<Environment> *current,
-                                       std::shared_ptr<Environment> push)
-    : prev(*current), current(current)
-{
-    *current = push;
-}
-
-EnvironmentContext::~EnvironmentContext()
-{
-    *current = prev;
 }
